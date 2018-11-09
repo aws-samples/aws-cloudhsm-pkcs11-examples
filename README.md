@@ -29,4 +29,15 @@ cmake ..
 make
 ```
 
-This will create application binaries in the `c/` directory.
+### Running
+
+Application binaries are in the `build/src/` directory. Applications will request
+a PIN on the command line. The CloudHSM PKCS#11 library will be used by default.
+
+```
+# After running make
+$ src/digest/digest
+
+	--pin <user:password>
+	[--library <path/to/pkcs11>]
+```
