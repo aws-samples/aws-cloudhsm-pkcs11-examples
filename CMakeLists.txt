@@ -11,4 +11,4 @@ SET(PROJECT_VERSION_PATCH 0)
 
 include_directories(include/pkcs11/v2.40)
 
-add_subdirectory(c)
+add_subdirectory(src)
