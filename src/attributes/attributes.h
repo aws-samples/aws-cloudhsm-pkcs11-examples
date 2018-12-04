@@ -1,9 +1,5 @@
-/**
- * @file
- *
- * @author Nabil S. Al-Ramli
- *
- * @copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+/*
+ * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -19,6 +15,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file
+ *
+ * @author Nabil S. Al-Ramli
+ */
+
 #ifndef ATTRIBUTES_H
 #define ATTRIBUTES_H
 
@@ -26,15 +28,27 @@
 extern "C" {
 #endif
 
-#include <common.h>
+#include <stdio.h>
+#include <inttypes.h>
 
-/**
- * Output object attributes.
- * @param session Valid PKCS11 session.
- * @param object The object handle.
- * @return CK_RV Value returned by the PKCS#11 library. This will indicate success or failure.
- */
-CK_RV attributes_output(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE object);
+#include "common.h"
+
+CK_RV attributes_get(
+        CK_SESSION_HANDLE session,
+        CK_OBJECT_HANDLE object,
+        CK_ATTRIBUTE_TYPE type,
+        uint8_t *buf,
+        size_t *buf_len );
+
+int attributes_output(
+        uint8_t *buf,
+        size_t buf_len,
+        FILE *f);
+
+CK_RV attributes_output_all(
+        CK_SESSION_HANDLE session,
+        CK_OBJECT_HANDLE object,
+        FILE *f );
 
 #ifdef  __cplusplus
 }

@@ -1,9 +1,5 @@
-/**
- * @file
- *
- * @author Nabil S. Al-Ramli
- *
- * @copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+/*
+ * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -19,12 +15,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file
+ *
+ * @author Nabil S. Al-Ramli
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <inttypes.h>
 
-#include <common.h>
+#include "common.h"
+#include "attributes.h"
 
 typedef struct {
     CK_ATTRIBUTE_TYPE type;
@@ -145,7 +148,112 @@ static const attributes_type attributes_types[] = {
 static const size_t attributes_types_len =
         (sizeof(attributes_types)/sizeof(attributes_types[0]));
 
-CK_RV attributes_output(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE object) {
+/**
+ * Get single object attribute.
+ *
+ * @returns CK_RV Value returned by the PKCS#11 library. This will indicate
+ *   success or failure.
+ */
+CK_RV attributes_get(
+        /** [in] Valid PKCS11 session. */
+        CK_SESSION_HANDLE session,
+        /** [in] The object handle. */
+        CK_OBJECT_HANDLE object,
+        /** [in] The attribute type. */
+        CK_ATTRIBUTE_TYPE type,
+        /** [out] The output buffer. Set to NULL to get the required buffer
+         *    size in buf_len. */
+        uint8_t *buf,
+        /** [in, out] The size of buf. */
+        size_t *buf_len ) {
+    CK_ATTRIBUTE attr[] = { { type, NULL_PTR, (CK_ULONG)0 } };
+    CK_RV rv = CKR_OK;
+
+    if (CK_INVALID_HANDLE == session)
+        return CKR_ARGUMENTS_BAD;
+
+    if (CK_INVALID_HANDLE == object)
+        return CKR_ARGUMENTS_BAD;
+
+    if (NULL == buf_len)
+        return CKR_ARGUMENTS_BAD;
+
+    if (buf) {
+        /* this assumes that buf_len is sufficiently large,
+         * set buf to NULL to get the required size
+         */
+        attr[0].pValue = (CK_BYTE_PTR)buf;
+        attr[0].ulValueLen = (CK_ULONG)buf_len;
+        rv = funcs->C_GetAttributeValue(
+            session,
+            object,
+            (CK_ATTRIBUTE_PTR)&attr[0].type,
+            (CK_ULONG)1 );
+        if (rv != CKR_OK) {
+            goto attributes_get_1;
+        }
+    } else {
+        rv = funcs->C_GetAttributeValue(
+                session,
+                object,
+                (CK_ATTRIBUTE_PTR)&attr[0].type,
+                (CK_ULONG)1 );
+        if (rv != CKR_OK)
+            goto attributes_get_1;
+
+        *buf_len = (size_t)attr[0].ulValueLen;
+    }
+
+    attributes_get_1:
+
+    return rv;
+}
+
+/**
+ * Output attribute value buffer in a formatted fashion.
+ *
+ * @returns 0 on success, 1 otherwise.
+ */
+int attributes_output(
+        /** [in] The input buffer. */
+        uint8_t *buf,
+        /** [in] The size of buf. */
+        size_t buf_len,
+        /** [in] The output file handle. */
+        FILE *f) {
+    size_t i = (size_t)0;
+
+    if (NULL == buf)
+        return 1;
+
+    if (NULL == f)
+        return 1;
+
+    for (i = (size_t)0; i < buf_len; i++) {
+        fprintf(f, "%02x ", buf[i]);
+    }
+
+    fprintf(f, "\n");
+    return 0;
+}
+
+/**
+ * Output all attributes belonging to an object.
+ *
+ * Iterates through all possible attributes of an object, finds the ones that
+ *   are valid using attributes_get(), and outputs them using
+ *   attributes_output().
+ *
+ * @returns CK_RV Value returned by the PKCS#11 library. This will indicate
+ *   success or failure.
+ */
+CK_RV attributes_output_all(
+        /** [in] Valid PKCS11 session. */
+        CK_SESSION_HANDLE session,
+        /** [in] The object handle. */
+        CK_OBJECT_HANDLE object,
+        /** [in] The output file handle. */
+        FILE *f ) {
     uint8_t attr_avail[attributes_types_len];
     size_t i = (size_t)0;
     CK_RV rv = CKR_OK;
@@ -154,6 +262,9 @@ CK_RV attributes_output(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE object) {
         return CKR_ARGUMENTS_BAD;
 
     if (CK_INVALID_HANDLE == object)
+        return CKR_ARGUMENTS_BAD;
+
+    if (NULL == f)
         return CKR_ARGUMENTS_BAD;
 
     memset(attr_avail, UINT8_C(0), sizeof(attr_avail));
@@ -168,67 +279,75 @@ CK_RV attributes_output(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE object) {
             object,
             (CK_ATTRIBUTE_PTR)&attr[0].type,
             (CK_ULONG)1 );
-        if (rv_local == CKR_OK) {
+        if (CKR_OK == rv_local) {
             attr_avail[i] = UINT8_C(1);
+        }
+
+        if (CKR_OBJECT_HANDLE_INVALID == rv_local) {
+            fprintf(f, "ERROR: object [%lu] is not valid\n", object);
+            rv = CKR_HOST_MEMORY;
+            goto attributes_output_all_1;
         }
     }
 
-    fprintf(stdout, "Attributes for object %lu:\n", object);
+    fprintf(f, "Attributes for object %lu:\n", object);
 
     for (i = (size_t)0; i < attributes_types_len; i++) {
-        CK_ATTRIBUTE attr[] = {
-                { attributes_types[i].type, NULL_PTR, (CK_ULONG)0 } };
+        uint8_t *buf = NULL;
+        size_t buf_len = (size_t)0;
         CK_RV rv_local = CKR_OK;
 
         if( UINT8_C(0) == attr_avail[i] )
-          continue;
+            continue;
 
-        rv_local = funcs->C_GetAttributeValue(
-            session,
-            object,
-            (CK_ATTRIBUTE_PTR)&attr[0].type,
-            (CK_ULONG)1 );
-        if (rv_local != CKR_OK) {
-            goto output_ec_keypair_attributes_1;
+        rv_local = attributes_get(
+                session, object, attributes_types[i].type, NULL, &buf_len );
+        switch (rv_local)
+        {
+            case CKR_HOST_MEMORY:
+                fprintf(f, "ERROR: failed to allocate memory\n");
+                rv = rv_local;
+                goto attributes_output_all_1;
+                break;
+            case CKR_OK:
+                break;
+            default:
+                goto attributes_output_all_1;
+                break;
         }
 
-        attr[0].pValue = (CK_BYTE_PTR)
-                calloc((size_t)attr[0].ulValueLen, (size_t)1);
-
-        if (NULL == attr[0].pValue) {
-            fprintf(stdout, "failed to allocate memory\n");
+        buf = (uint8_t *)calloc(buf_len, (size_t)1);
+        if (NULL == buf) {
+            fprintf(f, "ERROR: failed to allocate memory\n");
             rv = CKR_HOST_MEMORY;
             break;
         }
 
-        rv_local = funcs->C_GetAttributeValue(
-            session,
-            object,
-            (CK_ATTRIBUTE_PTR)&attr[0].type,
-            (CK_ULONG)1 );
-        if (rv_local != CKR_OK) {
-            goto output_ec_keypair_attributes_1;
+        rv_local = attributes_get(
+                session, object, attributes_types[i].type, buf, &buf_len );
+        switch (rv_local)
+        {
+            case CKR_HOST_MEMORY:
+                fprintf(f, "ERROR: failed to allocate memory\n");
+                rv = rv_local;
+                break;
+            case CKR_OK:
+                fprintf(f,  "INFO : Attribute [0x%010lu] %30s:\n  0x ",
+                       attributes_types[i].type, attributes_types[i].name );
+                attributes_output(buf, buf_len, f);
+                break;
+            default:
+                break;
         }
 
-        size_t j = (size_t)0;
+        free(buf);
 
-        fprintf(stdout,  "Attribute [0x%010lu] %30s:\n  0x ",
-               attr[0].type, attributes_types[i].name );
-
-        for (j = (size_t)0; j < (size_t)attr[0].ulValueLen; j++) {
-          fprintf(stdout, "%02x ", ((CK_BYTE *)(attr[0].pValue))[j]);
-        }
-
-        fprintf(stdout, "\n");
-
-        output_ec_keypair_attributes_1:
-
-        if (attr[0].pValue) {
-            free(attr[0].pValue);
-            attr[0].pValue = NULL_PTR;
-        }
+        if (CKR_OK != rv_local)
+            break;
     }
 
-    fprintf(stdout, "\n");
+    attributes_output_all_1:
+
+    fprintf(f, "\n");
     return rv;
 }
