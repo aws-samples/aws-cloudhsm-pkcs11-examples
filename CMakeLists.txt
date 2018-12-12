@@ -11,4 +11,6 @@ SET(PROJECT_VERSION_PATCH 0)
 
 include_directories(include/pkcs11/v2.40)
 
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
+
 add_subdirectory(src)
