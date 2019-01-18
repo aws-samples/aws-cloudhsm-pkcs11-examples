@@ -186,29 +186,10 @@ CK_RV aes_unwrap_key(
             unwrapped_key_handle);
 }
 
-int main(int argc, char **argv) {
-    CK_RV rv;
-    CK_SESSION_HANDLE session;
-    int rc = 1;
-
-    struct pkcs_arguments args = {};
-    if (get_pkcs_args(argc, argv, &args) < 0) {
-        return rc;
-    }
-
-    rv = pkcs11_initialize(args.library);
-    if (CKR_OK != rv) {
-        return rc;
-    }
-
-    rv = pkcs11_open_session(args.pin, &session);
-    if (CKR_OK != rv) {
-        return rc;
-    }
-
+int aes_wrap(CK_SESSION_HANDLE session) {
     // Generate a wrapping key.
     CK_OBJECT_HANDLE wrapping_key = CK_INVALID_HANDLE;
-    rv = generate_wrapping_key(session, 32, &wrapping_key);
+    CK_RV rv = generate_wrapping_key(session, 32, &wrapping_key);
     if (rv != CKR_OK) {
         printf("Wrapping key generation failed: %lu\n", rv);
         goto done;
@@ -262,7 +243,7 @@ int main(int argc, char **argv) {
 
     printf("Unwrapped bytes as object %lu\n", unwrapped_handle);
 
-    rc = 0;
+    int rc = 0;
 
     done:
     if (NULL != wrapped_key) {
@@ -282,6 +263,5 @@ int main(int argc, char **argv) {
         }
     }
 
-    pkcs11_finalize_session(session);
     return rc;
 }

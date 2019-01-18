@@ -14,12 +14,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <common.h>
-
+#include "wrap.h"
 
 /**
  * Generate an AES key that can be wrapped by an RSA key.
@@ -97,7 +92,7 @@ CK_RV generate_wrapping_keypair(CK_SESSION_HANDLE session,
  * @param wrapped_bytes_len
  * @return
  */
-CK_RV rsa_wrap_key(
+CK_RV rsa_oaep_wrap_key(
         CK_SESSION_HANDLE session,
         CK_OBJECT_HANDLE wrapping_key,
         CK_OBJECT_HANDLE key_to_wrap,
@@ -127,7 +122,7 @@ CK_RV rsa_wrap_key(
  * @param unwrapped_key_handle
  * @return
  */
-CK_RV rsa_unwrap_key(
+CK_RV rsa_oaep_unwrap_key(
         CK_SESSION_HANDLE session,
         CK_OBJECT_HANDLE wrapping_key,
         CK_KEY_TYPE wrapped_key_type,
@@ -185,29 +180,113 @@ CK_RV rsa_unwrap_key(
             unwrapped_key_handle);
 }
 
-int main(int argc, char **argv) {
-    CK_RV rv;
-    CK_SESSION_HANDLE session;
-    int rc = 1;
+/**
+ * Wrap a key using the wrapping_key handle.
+ * The key being wrapped must have the CKA_EXTRACTABLE flag set to true.
+ * @param session
+ * @param wrapping_key
+ * @param key_to_wrap
+ * @param wrapped_bytes
+ * @param wrapped_bytes_len
+ * @return
+ */
+CK_RV rsa_aes_wrap_key(
+        CK_SESSION_HANDLE session,
+        CK_OBJECT_HANDLE wrapping_key,
+        CK_OBJECT_HANDLE key_to_wrap,
+        CK_BYTE_PTR wrapped_bytes,
+        CK_ULONG_PTR wrapped_bytes_len) {
 
-    struct pkcs_arguments args = {};
-    if (get_pkcs_args(argc, argv, &args) < 0) {
-        return rc;
+    CK_ULONG aes_key_bits = 256;
+    CK_RSA_PKCS_OAEP_PARAMS oaep_params = { CKM_SHA256, CKG_MGF1_SHA256  };
+    CK_RSA_AES_KEY_WRAP_PARAMS params = { aes_key_bits, &oaep_params };
+    CK_MECHANISM mech = { CKM_RSA_AES_KEY_WRAP, &params, sizeof(params) };
+
+    // First, get the just the length of wrapped key
+    return funcs->C_WrapKey(session,
+                            &mech,
+                            wrapping_key,
+                            key_to_wrap,
+                            wrapped_bytes,
+                            wrapped_bytes_len);
+}
+
+/**
+ * Unwrap a previously wrapped key into the HSM.
+ * @param session
+ * @param wrapping_key
+ * @param wrapped_key_type
+ * @param wrapped_bytes
+ * @param wrapped_bytes_len
+ * @param unwrapped_key_handle
+ * @return
+ */
+CK_RV rsa_aes_unwrap_key(
+        CK_SESSION_HANDLE session,
+        CK_OBJECT_HANDLE wrapping_key,
+        CK_KEY_TYPE wrapped_key_type,
+        CK_BYTE_PTR wrapped_bytes,
+        CK_ULONG wrapped_bytes_len,
+        CK_OBJECT_HANDLE_PTR unwrapped_key_handle) {
+
+    CK_ULONG aes_key_bits = 256;
+    CK_RSA_PKCS_OAEP_PARAMS oaep_params = { CKM_SHA256, CKG_MGF1_SHA256  };
+    CK_RSA_AES_KEY_WRAP_PARAMS params = { aes_key_bits, &oaep_params };
+    CK_MECHANISM mech = { CKM_RSA_AES_KEY_WRAP, &params, sizeof(params) };
+
+    CK_OBJECT_CLASS key_class = CKO_SECRET_KEY;
+    CK_ATTRIBUTE *template = NULL;
+    CK_ULONG template_count = 0;
+
+    switch (wrapped_key_type) {
+        case CKK_DES3:
+        case CKK_AES:
+            template = (CK_ATTRIBUTE[]) {
+                    {CKA_CLASS,       &key_class,        sizeof(key_class)},
+                    {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
+                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)}
+            };
+            template_count = 4;
+            break;
+        case CKK_RSA:
+            key_class = CKO_PRIVATE_KEY;
+            template = (CK_ATTRIBUTE[]) {
+                    {CKA_CLASS,       &key_class,        sizeof(key_class)},
+                    {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
+                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)},
+            };
+            template_count = 4;
+            break;
+        case CKK_EC:
+            key_class = CKO_PRIVATE_KEY;
+            template = (CK_ATTRIBUTE[]) {
+                    {CKA_CLASS,       &key_class,        sizeof(key_class)},
+                    {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
+                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)},
+            };
+            template_count = 4;
+            break;
     }
 
-    rv = pkcs11_initialize(args.library);
-    if (CKR_OK != rv) {
-        return rc;
-    }
+    return funcs->C_UnwrapKey(
+            session,
+            &mech,
+            wrapping_key,
+            wrapped_bytes,
+            wrapped_bytes_len,
+            template,
+            template_count,
+            unwrapped_key_handle);
+}
 
-    rv = pkcs11_open_session(args.pin, &session);
-    if (CKR_OK != rv) {
-        return rc;
-    }
+int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
 
     // Generate a wrapping key.
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
-    rv = generate_aes_key(session, 32, &aes_key);
+    CK_RV rv = generate_aes_key(session, 32, &aes_key);
     if (rv != CKR_OK) {
         printf("Wrapping key generation failed: %lu\n", rv);
         goto done;
@@ -224,7 +303,7 @@ int main(int argc, char **argv) {
 
     // Determine how much space needs to be allocated for the wrapped key.
     CK_ULONG wrapped_len = 0;
-    rv = rsa_wrap_key(session, rsa_public_key, aes_key, NULL, &wrapped_len);
+    rv = rsa_oaep_wrap_key(session, rsa_public_key, aes_key, NULL, &wrapped_len);
     if (rv != CKR_OK) {
         printf("Could not determine size of wrapped key: %lu\n", rv);
         goto done;
@@ -237,7 +316,7 @@ int main(int argc, char **argv) {
     }
 
     // Wrap the key and display the hex string.
-    rv = rsa_wrap_key(session, rsa_public_key, aes_key, wrapped_key, &wrapped_len);
+    rv = rsa_oaep_wrap_key(session, rsa_public_key, aes_key, wrapped_key, &wrapped_len);
     if (rv != CKR_OK) {
         printf("Could not wrap key: %lu\n", rv);
         goto done;
@@ -253,7 +332,7 @@ int main(int argc, char **argv) {
 
     // Unwrap the key back into the HSM to verify everything worked.
     CK_OBJECT_HANDLE unwrapped_handle = CK_INVALID_HANDLE;
-    rv = rsa_unwrap_key(session, rsa_private_key, CKK_AES, wrapped_key, wrapped_len, &unwrapped_handle);
+    rv = rsa_oaep_unwrap_key(session, rsa_private_key, CKK_AES, wrapped_key, wrapped_len, &unwrapped_handle);
     if (rv != CKR_OK) {
         printf("Could not unwrap key: %lu\n", rv);
         goto done;
@@ -261,7 +340,7 @@ int main(int argc, char **argv) {
 
     printf("Unwrapped bytes as object %lu\n", unwrapped_handle);
 
-    rc = 0;
+    uint8_t rc = 0;
 
     done:
     if (NULL != wrapped_key) {
@@ -289,6 +368,94 @@ int main(int argc, char **argv) {
         }
     }
 
-    pkcs11_finalize_session(session);
+    return rc;
+}
+
+int rsa_aes_wrap(CK_SESSION_HANDLE session) {
+
+    // Generate a wrapping key.
+    CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
+    CK_RV rv = generate_aes_key(session, 32, &aes_key);
+    if (rv != CKR_OK) {
+        printf("Wrapping key generation failed: %lu\n", rv);
+        goto done;
+    }
+
+    // Generate keys to be wrapped.
+    CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
+    rv = generate_wrapping_keypair(session, 2048, &rsa_public_key, &rsa_private_key);
+    if (rv != CKR_OK) {
+        printf("RSA key generation failed: %lu\n", rv);
+        goto done;
+    }
+
+    // Determine how much space needs to be allocated for the wrapped key.
+    CK_ULONG wrapped_len = 0;
+    rv = rsa_aes_wrap_key(session, rsa_public_key, aes_key, NULL, &wrapped_len);
+    if (rv != CKR_OK) {
+        printf("Could not determine size of wrapped key: %lu\n", rv);
+        goto done;
+    }
+
+    CK_BYTE_PTR wrapped_key = malloc(wrapped_len);
+    if (NULL == wrapped_key) {
+        printf("Could not allocate memory to hold wrapped key\n");
+        goto done;
+    }
+
+    // Wrap the key and display the hex string.
+    rv = rsa_aes_wrap_key(session, rsa_public_key, aes_key, wrapped_key, &wrapped_len);
+    if (rv != CKR_OK) {
+        printf("Could not wrap key: %lu\n", rv);
+        goto done;
+    }
+
+    unsigned char *hex_array = NULL;
+    bytes_to_new_hexstring(wrapped_key, wrapped_len, &hex_array);
+    if (!hex_array) {
+        printf("Could not allocate hex array\n");
+        goto done;
+    }
+    printf("Wrapped key: %s\n", hex_array);
+
+    // Unwrap the key back into the HSM to verify everything worked.
+    CK_OBJECT_HANDLE unwrapped_handle = CK_INVALID_HANDLE;
+    rv = rsa_aes_unwrap_key(session, rsa_private_key, CKK_AES, wrapped_key, wrapped_len, &unwrapped_handle);
+    if (rv != CKR_OK) {
+        printf("Could not unwrap key: %lu\n", rv);
+        goto done;
+    }
+
+    printf("Unwrapped bytes as object %lu\n", unwrapped_handle);
+
+    uint8_t rc = 0;
+
+    done:
+    if (NULL != wrapped_key) {
+        free(wrapped_key);
+    }
+
+    if (NULL != hex_array) {
+        free(hex_array);
+    }
+
+    // The wrapping key is a token key, so we have to clean it up.
+    if (CK_INVALID_HANDLE != rsa_public_key) {
+        rv = funcs->C_DestroyObject(session, rsa_public_key);
+        if (CKR_OK != rv) {
+            printf("Could not delete rsa_public_key key: %lu\n", rv);
+            rc = 1;
+        }
+    }
+
+    if (CK_INVALID_HANDLE != rsa_private_key) {
+        rv = funcs->C_DestroyObject(session, rsa_private_key);
+        if (CKR_OK != rv) {
+            printf("Could not delete rsa_private_key key: %lu\n", rv);
+            rc = 1;
+        }
+    }
+
     return rc;
 }
