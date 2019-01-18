@@ -5,5 +5,5 @@ find_library(cloudhsmpkcs11 STATIC)
 
 include_directories("../common")
 
-add_executable(wrapping wrapping.c)
+add_executable(wrapping aes_wrapping.c)
 target_link_libraries(wrapping cloudhsmpkcs11 ssl crypto)
