@@ -83,7 +83,7 @@ CK_RV generate_wrapping_keypair(CK_SESSION_HANDLE session,
 }
 
 /**
- * Wrap a key using the wrapping_key handle.
+ * Wrap a key using the RSA OAEP mechanism.
  * The key being wrapped must have the CKA_EXTRACTABLE flag set to true.
  * @param session
  * @param wrapping_key
@@ -114,6 +114,7 @@ CK_RV rsa_oaep_wrap_key(
 
 /**
  * Unwrap a previously wrapped key into the HSM.
+ * This demonstrates how to use the OAEP unwrap mechanism.
  * @param session
  * @param wrapping_key
  * @param wrapped_key_type
@@ -181,7 +182,7 @@ CK_RV rsa_oaep_unwrap_key(
 }
 
 /**
- * Wrap a key using the wrapping_key handle.
+ * Wrap a key using the RSA AES wrapping method.
  * The key being wrapped must have the CKA_EXTRACTABLE flag set to true.
  * @param session
  * @param wrapping_key

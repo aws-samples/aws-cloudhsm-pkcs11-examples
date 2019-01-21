@@ -18,8 +18,7 @@
 #include "encrypt.h"
 
 /**
- * Encrypt data using an AES key and the CBC mechanism.
- * The IV is hardcoded to all 0x01 bytes.
+ * Encrypt data using an AES key and the ECB mechanism.
  * @param session Active PKCS#11 sessions
  * @param key Handle of encryption key
  * @param plaintext
@@ -28,15 +27,14 @@
  * @param ciphertext_length
  * @return CK_RV
  */
-CK_RV encrypt_aes_cbc(CK_SESSION_HANDLE session,
-                      CK_OBJECT_HANDLE key,
-                      CK_BYTE_PTR plaintext,
-                      CK_ULONG plaintext_length,
-                      CK_BYTE_PTR ciphertext,
-                      CK_ULONG_PTR ciphertext_length) {
+CK_RV encrypt_aes_ecb(CK_SESSION_HANDLE session,
+                  CK_OBJECT_HANDLE key,
+                  CK_BYTE_PTR plaintext,
+                  CK_ULONG plaintext_length,
+                  CK_BYTE_PTR ciphertext,
+                  CK_ULONG_PTR ciphertext_length) {
     CK_RV rv;
-    CK_BYTE iv[16] = {1, 1, 1, 1, 1, 1, 1};
-    CK_MECHANISM mech = {CKM_AES_CBC_PAD, iv, 16};
+    CK_MECHANISM mech = {CKM_AES_ECB, NULL, 0};
 
     rv = funcs->C_EncryptInit(session, &mech, key);
     if (rv != CKR_OK) {
@@ -49,8 +47,7 @@ CK_RV encrypt_aes_cbc(CK_SESSION_HANDLE session,
 }
 
 /**
- * Decrypt data using an AES key and the CBC mechanism.
- * The IV is hardcoded to all 0x01 bytes.
+ * Decrypt data using an AES key and the ECB mechanism.
  * @param session
  * @param key
  * @param ciphertext
@@ -59,15 +56,14 @@ CK_RV encrypt_aes_cbc(CK_SESSION_HANDLE session,
  * @param plaintext_length
  * @return CK_RV
  */
-CK_RV decrypt_aes_cbc(CK_SESSION_HANDLE session,
-                      CK_OBJECT_HANDLE key,
-                      CK_BYTE_PTR ciphertext,
-                      CK_ULONG ciphertext_length,
-                      CK_BYTE_PTR plaintext,
-                      CK_ULONG_PTR plaintext_length) {
+CK_RV decrypt_aes_ecb(CK_SESSION_HANDLE session,
+                  CK_OBJECT_HANDLE key,
+                  CK_BYTE_PTR ciphertext,
+                  CK_ULONG ciphertext_length,
+                  CK_BYTE_PTR plaintext,
+                  CK_ULONG_PTR plaintext_length) {
     CK_RV rv;
-    CK_BYTE iv[16] = {1, 1, 1, 1, 1, 1, 1};
-    CK_MECHANISM mech = {CKM_AES_CBC_PAD, iv, 16};
+    CK_MECHANISM mech = {CKM_AES_ECB, NULL, 0};
 
     rv = funcs->C_DecryptInit(session, &mech, key);
     if (rv != CKR_OK) {
@@ -78,3 +74,4 @@ CK_RV decrypt_aes_cbc(CK_SESSION_HANDLE session,
 
     return rv;
 }
+
