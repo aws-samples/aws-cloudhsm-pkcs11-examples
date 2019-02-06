@@ -15,6 +15,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <unistd.h>
+#include <fcntl.h>
 #include "wrap.h"
 
 int main(int argc, char **argv) {
@@ -37,8 +39,13 @@ int main(int argc, char **argv) {
         return rc;
     }
 
+    printf("Running RSA wrap with OAEP padding...\n");
     rc = rsa_oaep_wrap(session);
+
+    printf("Running RSA AES wrap...\n");
     rc = rsa_aes_wrap(session);
+
+    printf("Running AES wrap...\n");
     rc = aes_wrap(session);
 
     pkcs11_finalize_session(session);

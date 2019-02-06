@@ -26,5 +26,18 @@
 int rsa_aes_wrap(CK_SESSION_HANDLE session);
 int rsa_oaep_wrap(CK_SESSION_HANDLE session);
 int aes_wrap(CK_SESSION_HANDLE session);
+CK_RV rsa_aes_unwrap_key(
+        CK_SESSION_HANDLE session,
+        CK_OBJECT_HANDLE wrapping_key,
+        CK_KEY_TYPE wrapped_key_type,
+        CK_BYTE_PTR wrapped_bytes,
+        CK_ULONG wrapped_bytes_len,
+        CK_OBJECT_HANDLE_PTR unwrapped_key_handle);
+CK_RV rsa_aes_wrap_key(
+        CK_SESSION_HANDLE session,
+        CK_OBJECT_HANDLE wrapping_key,
+        CK_OBJECT_HANDLE key_to_wrap,
+        CK_BYTE_PTR wrapped_bytes,
+        CK_ULONG_PTR wrapped_bytes_len);
 
 #endif //AWS_CLOUDHSM_PKCS11_EXAMPLES_WRAP_H

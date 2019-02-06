@@ -184,6 +184,8 @@ CK_RV rsa_oaep_unwrap_key(
 /**
  * Wrap a key using the RSA AES wrapping method.
  * The key being wrapped must have the CKA_EXTRACTABLE flag set to true.
+ * The first aes_key_bits (256) will be the RSA OAEP wrapped ephemeral key.
+ * The last 40 bytes will be the key_to_wrap, wrapped with the ephemeral key.
  * @param session
  * @param wrapping_key
  * @param key_to_wrap
@@ -283,6 +285,11 @@ CK_RV rsa_aes_unwrap_key(
             unwrapped_key_handle);
 }
 
+/**
+ * Demonstrate how to wrap with RSA OAEP padding.
+ * @param session
+ * @return
+ */
 int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
 
     // Generate a wrapping key.
@@ -372,6 +379,11 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
     return rc;
 }
 
+/**
+ * Demonstrate RSA AES wrapping.
+ * @param session
+ * @return
+ */
 int rsa_aes_wrap(CK_SESSION_HANDLE session) {
 
     // Generate a wrapping key.
