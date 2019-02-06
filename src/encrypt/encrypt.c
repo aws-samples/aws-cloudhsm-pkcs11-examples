@@ -46,6 +46,105 @@ CK_RV generate_aes_key(CK_SESSION_HANDLE session,
 }
 
 /**
+ * Encrypt and decrypt a string using AES ECB.
+ * @param session Active PKCS#11 session
+ */
+void aes_ecb_sample(CK_SESSION_HANDLE session) {
+    CK_RV rv;
+
+    // Generate a 256 bit AES key.
+    CK_OBJECT_HANDLE aes_key;
+    rv = generate_aes_key(session, 32, &aes_key);
+    if (rv != CKR_OK) {
+        printf("AES key generation failed: %lu\n", rv);
+        return;
+    }
+
+    CK_BYTE_PTR plaintext = "Data must be a 16 byte multiple.";
+    CK_ULONG plaintext_length = strlen(plaintext);
+    CK_ULONG ciphertext_length = 0;
+
+    printf("Plaintext: %s\n", plaintext);
+    printf("Plaintext length: %lu\n", plaintext_length);
+
+    // Determine how much memory will be required to hold the ciphertext.
+    rv = encrypt_aes_ecb(session, aes_key,
+                         plaintext, plaintext_length,
+                         NULL, &ciphertext_length);
+    if (rv != CKR_OK) {
+        printf("Encryption failed: %lu\n", rv);
+        return;
+    }
+
+    // Allocate the required memory.
+    CK_BYTE_PTR ciphertext = malloc(ciphertext_length);
+    if (NULL==ciphertext) {
+        printf("Could not allocate memory for ciphertext\n");
+        return;
+    }
+    memset(ciphertext, 0, ciphertext_length);
+
+    // Encrypt the data.
+    rv = encrypt_aes_ecb(session, aes_key,
+                         plaintext, plaintext_length,
+                         ciphertext, &ciphertext_length);
+    if (rv != CKR_OK) {
+        printf("Encryption failed: %lu\n", rv);
+        goto done;
+    }
+
+    // Print just the ciphertext in hex format
+    unsigned char *hex_array = NULL;
+    bytes_to_new_hexstring(ciphertext, ciphertext_length, &hex_array);
+    if (!hex_array) {
+        printf("Could not allocate memory for hex array\n");
+        goto done;
+    }
+    printf("Ciphertext: %s\n", hex_array);
+    printf("Ciphertext length: %lu\n", ciphertext_length);
+
+    // Determine how much memory is required to hold the decrypted text.
+    CK_ULONG decrypted_ciphertext_length = 0;
+    rv = decrypt_aes_ecb(session, aes_key,
+                         ciphertext, ciphertext_length,
+                         NULL, &decrypted_ciphertext_length);
+    if (rv != CKR_OK) {
+        printf("Decryption failed: %lu\n", rv);
+        goto done;
+    }
+
+    // Allocate memory for the decrypted ciphertext.
+    CK_BYTE_PTR decrypted_ciphertext = malloc(decrypted_ciphertext_length);
+    if (NULL==decrypted_ciphertext) {
+        printf("Could not allocate memory for decrypted ciphertext\n");
+        goto done;
+    }
+
+    // Decrypt the ciphertext.
+    rv = decrypt_aes_ecb(session, aes_key,
+                         ciphertext, ciphertext_length,
+                         decrypted_ciphertext, &decrypted_ciphertext_length);
+    if (CKR_OK!=rv) {
+        printf("Decryption failed: %lu\n", rv);
+    }
+
+    printf("Decrypted text: %s\n", decrypted_ciphertext);
+
+    done:
+    if (NULL!=decrypted_ciphertext) {
+        free(decrypted_ciphertext);
+    }
+
+    if (NULL!=hex_array) {
+        free(hex_array);
+    }
+
+    if (NULL!=ciphertext) {
+        free(ciphertext);
+    }
+}
+
+/**
  * Encrypt and decrypt a string using AES CBC.
  * @param session Active PKCS#11 session
  */
@@ -68,9 +167,9 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     printf("Plaintext length: %lu\n", plaintext_length);
 
     // Determine how much memory will be required to hold the ciphertext.
-    rv = encrypt_aes(session, aes_key,
-                     plaintext, plaintext_length,
-                     NULL, &ciphertext_length);
+    rv = encrypt_aes_cbc(session, aes_key,
+                         plaintext, plaintext_length,
+                         NULL, &ciphertext_length);
     if (rv != CKR_OK) {
         printf("Encryption failed: %lu\n", rv);
         return;
@@ -85,9 +184,9 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     memset(ciphertext, 0, ciphertext_length);
 
     // Encrypt the data.
-    rv = encrypt_aes(session, aes_key,
-                     plaintext, plaintext_length,
-                     ciphertext, &ciphertext_length);
+    rv = encrypt_aes_cbc(session, aes_key,
+                         plaintext, plaintext_length,
+                         ciphertext, &ciphertext_length);
     if (rv != CKR_OK) {
         printf("Encryption failed: %lu\n", rv);
         goto done;
@@ -105,9 +204,9 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
 
     // Determine how much memory is required to hold the decrypted text.
     CK_ULONG decrypted_ciphertext_length = 0;
-    rv = decrypt_aes(session, aes_key,
-                     ciphertext, ciphertext_length,
-                     NULL, &decrypted_ciphertext_length);
+    rv = decrypt_aes_cbc(session, aes_key,
+                         ciphertext, ciphertext_length,
+                         NULL, &decrypted_ciphertext_length);
     if (rv != CKR_OK) {
         printf("Decryption failed: %lu\n", rv);
         goto done;
@@ -121,9 +220,9 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     }
 
     // Decrypt the ciphertext.
-    rv = decrypt_aes(session, aes_key,
-                     ciphertext, ciphertext_length,
-                     decrypted_ciphertext, &decrypted_ciphertext_length);
+    rv = decrypt_aes_cbc(session, aes_key,
+                         ciphertext, ciphertext_length,
+                         decrypted_ciphertext, &decrypted_ciphertext_length);
     if (CKR_OK!=rv) {
         printf("Decryption failed: %lu\n", rv);
     }
@@ -288,6 +387,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    printf("\nEncrypt/Decrypt with AES ECB\n");
+    aes_ecb_sample(session);
     printf("\nEncrypt/Decrypt with AES CBC\n");
     aes_cbc_sample(session);
     printf("\nEncrypt/Decrypt with AES GCM\n");

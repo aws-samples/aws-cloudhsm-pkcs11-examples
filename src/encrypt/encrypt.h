@@ -22,23 +22,36 @@
 
 #include <common.h>
 
-#define MAX_ENCRYPTED_DATA_LENGTH 1024
 #define AES_GCM_IV_SIZE 12
 #define AES_GCM_TAG_SIZE 16
 
-CK_RV encrypt_aes(CK_SESSION_HANDLE session,
-                  CK_OBJECT_HANDLE key,
-                  CK_BYTE_PTR plaintext,
-                  CK_ULONG plaintext_length,
-                  CK_BYTE_PTR ciphertext,
-                  CK_ULONG_PTR ciphertext_length);
+CK_RV encrypt_aes_ecb(CK_SESSION_HANDLE session,
+                      CK_OBJECT_HANDLE key,
+                      CK_BYTE_PTR plaintext,
+                      CK_ULONG plaintext_length,
+                      CK_BYTE_PTR ciphertext,
+                      CK_ULONG_PTR ciphertext_length);
 
-CK_RV decrypt_aes(CK_SESSION_HANDLE session,
-                  CK_OBJECT_HANDLE key,
-                  CK_BYTE_PTR ciphertext,
-                  CK_ULONG ciphertext_length,
-                  CK_BYTE_PTR plaintext,
-                  CK_ULONG_PTR plaintext_length);
+CK_RV decrypt_aes_ecb(CK_SESSION_HANDLE session,
+                      CK_OBJECT_HANDLE key,
+                      CK_BYTE_PTR ciphertext,
+                      CK_ULONG ciphertext_length,
+                      CK_BYTE_PTR plaintext,
+                      CK_ULONG_PTR plaintext_length);
+
+CK_RV encrypt_aes_cbc(CK_SESSION_HANDLE session,
+                      CK_OBJECT_HANDLE key,
+                      CK_BYTE_PTR plaintext,
+                      CK_ULONG plaintext_length,
+                      CK_BYTE_PTR ciphertext,
+                      CK_ULONG_PTR ciphertext_length);
+
+CK_RV decrypt_aes_cbc(CK_SESSION_HANDLE session,
+                      CK_OBJECT_HANDLE key,
+                      CK_BYTE_PTR ciphertext,
+                      CK_ULONG ciphertext_length,
+                      CK_BYTE_PTR plaintext,
+                      CK_ULONG_PTR plaintext_length);
 
 CK_RV encrypt_aes_gcm(CK_SESSION_HANDLE session,
                       CK_OBJECT_HANDLE key,
