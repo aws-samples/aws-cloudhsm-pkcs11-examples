@@ -23,8 +23,8 @@
 #define MAX_SIGNATURE_LENGTH 256
 
 extern CK_FUNCTION_LIST *funcs;
-extern CK_BBOOL true;
-extern CK_BBOOL false;
+extern CK_BBOOL true_val;
+extern CK_BBOOL false_val;
 
 CK_RV pkcs11_initialize(char *library_path);
 

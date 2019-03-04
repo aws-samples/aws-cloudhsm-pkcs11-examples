@@ -93,6 +93,7 @@ int main(int argc, char **argv)
     // Set the PKCS11 digest mechanism type.
     // Supported types are kept up to date at https://docs.aws.amazon.com/cloudhsm/latest/userguide/pkcs11-mechanisms.html
     CK_MECHANISM_TYPE mechanism = CKM_SHA256;
+    unsigned char *hex_array = NULL;
 
     rv = generateDigest(session, mechanism, data, data_length, &digest, &digest_length);
     if (rv != CKR_OK) {
@@ -100,7 +101,6 @@ int main(int argc, char **argv)
         goto done;
     }
 
-    unsigned char *hex_array = NULL;
     bytes_to_new_hexstring(digest, digest_length, &hex_array);
     if (!hex_array) {
         printf("Failed to allocate memory for hex array\n");

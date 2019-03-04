@@ -1,16 +1,18 @@
 cmake_minimum_required(VERSION 2.8)
-
-SET(ORGANIZATION_NAME "Amazon.com, Inc.")
-
 project(aws-cloudhsm-pkcs11-examples)
 
-# Version 1.0
-SET(PROJECT_VERSION_MAJOR 1)
-SET(PROJECT_VERSION_MINOR 0)
-SET(PROJECT_VERSION_PATCH 0)
+SET(ORGANIZATION_NAME "Amazon.com, Inc.")
+SET(CMAKE_C_FLAGS "-Wall -Werror -Wno-pointer-sign -fno-signed-char -std=c99")
 
 include_directories(include/pkcs11/v2.40)
+include_directories(src/common)
 
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
-
-add_subdirectory(src)
+add_subdirectory(src/common)
+add_subdirectory(src/digest)
+add_subdirectory(src/generate)
+add_subdirectory(src/sign)
+add_subdirectory(src/encrypt)
+add_subdirectory(src/wrapping)
+add_subdirectory(src/hsm_info)
+add_subdirectory(src/attributes)
+add_subdirectory(src/destroy)
