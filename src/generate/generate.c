@@ -35,8 +35,8 @@ CK_RV generate_aes_key(CK_SESSION_HANDLE session,
     CK_MECHANISM mech = {CKM_AES_KEY_GEN, NULL, 0};
 
     CK_ATTRIBUTE template[] = {
-            {CKA_SENSITIVE, &true,             sizeof(CK_BBOOL)},
-            {CKA_TOKEN,     &false,            sizeof(CK_BBOOL)},
+            {CKA_SENSITIVE, &true_val,             sizeof(CK_BBOOL)},
+            {CKA_TOKEN,     &false_val,            sizeof(CK_BBOOL)},
             {CKA_VALUE_LEN, &key_length_bytes, sizeof(CK_ULONG)}
     };
 
@@ -61,13 +61,13 @@ CK_RV generate_rsa_keypair(CK_SESSION_HANDLE session,
     CK_BYTE public_exponent[] = {0x01, 0x00, 0x01};
 
     CK_ATTRIBUTE public_key_template[] = {
-            {CKA_VERIFY,          &true,            sizeof(CK_BBOOL)},
+            {CKA_VERIFY,          &true_val,            sizeof(CK_BBOOL)},
             {CKA_MODULUS_BITS,    &key_length_bits, sizeof(CK_ULONG)},
             {CKA_PUBLIC_EXPONENT, &public_exponent, sizeof(public_exponent)},
     };
 
     CK_ATTRIBUTE private_key_template[] = {
-            {CKA_SIGN, &true, sizeof(CK_BBOOL)},
+            {CKA_SIGN, &true_val, sizeof(CK_BBOOL)},
     };
 
     rv = funcs->C_GenerateKeyPair(session,
@@ -97,12 +97,12 @@ CK_RV generate_ec_keypair(CK_SESSION_HANDLE session,
     CK_MECHANISM mech = {CKM_EC_KEY_PAIR_GEN, NULL, 0};
 
     CK_ATTRIBUTE public_key_template[] = {
-            {CKA_VERIFY,    &true,           sizeof(CK_BBOOL)},
+            {CKA_VERIFY,    &true_val,           sizeof(CK_BBOOL)},
             {CKA_EC_PARAMS, named_curve_oid, named_curve_oid_len}
     };
 
     CK_ATTRIBUTE private_key_template[] = {
-            {CKA_SIGN, &true, sizeof(CK_BBOOL)},
+            {CKA_SIGN, &true_val, sizeof(CK_BBOOL)},
     };
 
     rv = funcs->C_GenerateKeyPair(session,

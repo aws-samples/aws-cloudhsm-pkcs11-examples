@@ -69,6 +69,8 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
         return;
     }
     memset(ciphertext, 0, ciphertext_length);
+    unsigned char *hex_array = NULL;
+    CK_BYTE_PTR decrypted_ciphertext = NULL;
 
     // Encrypt the data.
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, ciphertext, &ciphertext_length);
@@ -78,7 +80,6 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     }
 
     // Print just the ciphertext in hex format
-    unsigned char *hex_array = NULL;
     bytes_to_new_hexstring(ciphertext, ciphertext_length, &hex_array);
     if (!hex_array) {
         printf("Could not allocate memory for hex array\n");
@@ -106,7 +107,7 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     }
 
     // Allocate memory for the decrypted ciphertext.
-    CK_BYTE_PTR decrypted_ciphertext = malloc(decrypted_ciphertext_length);
+    decrypted_ciphertext = malloc(decrypted_ciphertext_length);
     if (NULL==decrypted_ciphertext) {
         printf("Could not allocate memory for decrypted ciphertext\n");
         goto done;

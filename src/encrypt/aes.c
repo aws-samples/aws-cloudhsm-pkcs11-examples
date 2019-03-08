@@ -35,10 +35,10 @@ CK_RV generate_aes_key(CK_SESSION_HANDLE session,
     mech.pParameter = NULL;
 
     CK_ATTRIBUTE template[] = {
-            {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
-            {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)},
-            {CKA_ENCRYPT,     &true,             sizeof(CK_BBOOL)},
-            {CKA_DECRYPT,     &true,             sizeof(CK_BBOOL)},
+            {CKA_TOKEN,       &false_val,            sizeof(CK_BBOOL)},
+            {CKA_EXTRACTABLE, &true_val,             sizeof(CK_BBOOL)},
+            {CKA_ENCRYPT,     &true_val,             sizeof(CK_BBOOL)},
+            {CKA_DECRYPT,     &true_val,             sizeof(CK_BBOOL)},
             {CKA_VALUE_LEN,   &key_length_bytes, sizeof(CK_ULONG)},
     };
 

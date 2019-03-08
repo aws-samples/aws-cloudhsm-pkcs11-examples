@@ -21,8 +21,8 @@
 
 #include "common.h"
 
-CK_BBOOL true = TRUE;
-CK_BBOOL false = FALSE;
+CK_BBOOL true_val = TRUE;
+CK_BBOOL false_val = FALSE;
 
 static void show_help() {
     printf("\n\t--pin <user:password>\n\t[--library <path/to/pkcs11>]\n\n");

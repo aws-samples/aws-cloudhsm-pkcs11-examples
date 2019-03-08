@@ -14,32 +14,21 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __C_SAMPLES_H__
-#define __C_SAMPLES_H__
 
+#ifndef AWS_CLOUDHSM_PKCS11_EXAMPLES_IO_H
+#define AWS_CLOUDHSM_PKCS11_EXAMPLES_IO_H
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
-#include <cryptoki.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 
-#define MAX_SIGNATURE_LENGTH 256
+#include <openssl/pem.h>
+#include <openssl/err.h>
 
-extern CK_FUNCTION_LIST *funcs;
-extern CK_BBOOL true_val;
-extern CK_BBOOL false_val;
+size_t write_wrapped_key(char *path, char *bytes, size_t len);
+RSA *read_RSA_PUBKEY(char *path);
 
-CK_RV pkcs11_initialize(char *library_path);
-
-CK_RV pkcs11_open_session(const CK_UTF8CHAR_PTR pin, CK_SESSION_HANDLE_PTR session);
-CK_RV pkcs11_get_slot(CK_SLOT_ID *slot_id);
-
-void pkcs11_finalize_session(CK_SESSION_HANDLE session);
-
-struct pkcs_arguments {
-    char *pin;
-    char *library;
-};
-
-int get_pkcs_args(int argc, char **argv, struct pkcs_arguments *args);
-
-int bytes_to_new_hexstring(char *bytes, size_t bytes_len, unsigned char **hex);
-
-#endif
+#endif //AWS_CLOUDHSM_PKCS11_EXAMPLES_IO_H

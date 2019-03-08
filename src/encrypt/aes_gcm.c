@@ -77,9 +77,14 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
         printf("Encryption Init failed: %lu\n", rv);
         return;
     }
-    
+
+    unsigned char *hex_array = NULL;
+    CK_BYTE_PTR decrypted_ciphertext = NULL;
+    CK_BYTE_PTR ciphertext = NULL;
+
     // Determine how much memory is required to store the ciphertext.
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, NULL, &ciphertext_length);
+
     // The ciphertext will be prepended with the HSM generated IV
     // so the length must include the IV
     ciphertext_length += AES_GCM_IV_SIZE;
@@ -89,7 +94,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     }
 
     // Allocate memory to store the ciphertext.
-    CK_BYTE_PTR ciphertext = malloc(ciphertext_length);
+    ciphertext = malloc(ciphertext_length);
     if (NULL==ciphertext) {
         printf("Failed to allocate ciphertext memory\n");
         goto done;
@@ -98,6 +103,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
 
     // Encrypt the data.
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, ciphertext + AES_GCM_IV_SIZE, &ciphertext_length);
+
     // Prepend HSM generated IV to ciphertext buffer
     memcpy(ciphertext, iv, AES_GCM_IV_SIZE);
     ciphertext_length += AES_GCM_IV_SIZE;
@@ -108,7 +114,6 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
 
     // Ciphertext buffer = IV || ciphertext || TAG
     // Print the HSM generated IV
-    unsigned char *hex_array = NULL;
     bytes_to_new_hexstring(ciphertext, AES_GCM_IV_SIZE, &hex_array);
     if (!hex_array) {
         printf("Could not allocate hex array\n");
@@ -153,7 +158,6 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     }
 
     // Determine the length of decrypted ciphertext.
-    CK_BYTE_PTR decrypted_ciphertext = NULL;
     CK_ULONG decrypted_ciphertext_length = 0;
     rv = funcs->C_Decrypt(session, ciphertext + AES_GCM_IV_SIZE, ciphertext_length - AES_GCM_IV_SIZE,
                           NULL, &decrypted_ciphertext_length);

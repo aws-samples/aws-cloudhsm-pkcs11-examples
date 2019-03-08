@@ -3,9 +3,6 @@ project(encrypt)
 
 find_library(cloudhsmpkcs11 STATIC)
 
-include_directories("../common")
-include_directories("../pkcs11_headers")
-
 add_executable(aes_cbc aes_cbc.c aes.c)
 add_executable(aes_ecb aes_ecb.c aes.c)
 add_executable(aes_gcm aes_gcm.c aes.c)

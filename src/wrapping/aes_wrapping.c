@@ -41,11 +41,11 @@ CK_RV generate_wrapping_key(CK_SESSION_HANDLE session,
     mech.pParameter = NULL;
 
     CK_ATTRIBUTE template[] = {
-            {CKA_TOKEN,     &true,             sizeof(CK_BBOOL)},
-            {CKA_WRAP,      &true,             sizeof(CK_BBOOL)},
-            {CKA_UNWRAP,    &true,             sizeof(CK_BBOOL)},
-            {CKA_ENCRYPT,   &false,            sizeof(CK_BBOOL)},
-            {CKA_DECRYPT,   &false,            sizeof(CK_BBOOL)},
+            {CKA_TOKEN,     &true_val,             sizeof(CK_BBOOL)},
+            {CKA_WRAP,      &true_val,             sizeof(CK_BBOOL)},
+            {CKA_UNWRAP,    &true_val,             sizeof(CK_BBOOL)},
+            {CKA_ENCRYPT,   &false_val,            sizeof(CK_BBOOL)},
+            {CKA_DECRYPT,   &false_val,            sizeof(CK_BBOOL)},
             {CKA_VALUE_LEN, &key_length_bytes, sizeof(key_length_bytes)}
     };
 
@@ -70,16 +70,16 @@ CK_RV generate_rsa_keypair(CK_SESSION_HANDLE session,
     CK_BYTE public_exponent[] = {0x01, 0x00, 0x01};
 
     CK_ATTRIBUTE public_key_template[] = {
-            {CKA_TOKEN,           &false,           sizeof(CK_BBOOL)},
-            {CKA_VERIFY,          &true,            sizeof(CK_BBOOL)},
+            {CKA_TOKEN,           &false_val,           sizeof(CK_BBOOL)},
+            {CKA_VERIFY,          &true_val,            sizeof(CK_BBOOL)},
             {CKA_MODULUS_BITS,    &key_length_bits, sizeof(CK_ULONG)},
             {CKA_PUBLIC_EXPONENT, &public_exponent, sizeof(public_exponent)},
     };
 
     CK_ATTRIBUTE private_key_template[] = {
-            {CKA_TOKEN,       &false, sizeof(CK_BBOOL)},
-            {CKA_SIGN,        &true,  sizeof(CK_BBOOL)},
-            {CKA_EXTRACTABLE, &true,  sizeof(CK_BBOOL)}
+            {CKA_TOKEN,       &false_val, sizeof(CK_BBOOL)},
+            {CKA_SIGN,        &true_val,  sizeof(CK_BBOOL)},
+            {CKA_EXTRACTABLE, &true_val,  sizeof(CK_BBOOL)}
     };
 
     rv = funcs->C_GenerateKeyPair(session,
@@ -148,8 +148,8 @@ CK_RV aes_unwrap_key(
             template = (CK_ATTRIBUTE[]) {
                     {CKA_CLASS,       &key_class,        sizeof(key_class)},
                     {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
-                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
-                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)}
+                    {CKA_TOKEN,       &false_val,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,             sizeof(CK_BBOOL)}
             };
             template_count = 4;
             break;
@@ -158,8 +158,8 @@ CK_RV aes_unwrap_key(
             template = (CK_ATTRIBUTE[]) {
                     {CKA_CLASS,       &key_class,        sizeof(key_class)},
                     {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
-                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
-                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)},
+                    {CKA_TOKEN,       &false_val,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,             sizeof(CK_BBOOL)},
             };
             template_count = 4;
             break;
@@ -168,8 +168,8 @@ CK_RV aes_unwrap_key(
             template = (CK_ATTRIBUTE[]) {
                     {CKA_CLASS,       &key_class,        sizeof(key_class)},
                     {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
-                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
-                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)},
+                    {CKA_TOKEN,       &false_val,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,             sizeof(CK_BBOOL)},
             };
             template_count = 4;
             break;
@@ -188,6 +188,9 @@ CK_RV aes_unwrap_key(
 
 int aes_wrap(CK_SESSION_HANDLE session) {
     // Generate a wrapping key.
+    unsigned char *hex_array = NULL;
+    CK_BYTE_PTR wrapped_key = NULL;
+
     CK_OBJECT_HANDLE wrapping_key = CK_INVALID_HANDLE;
     CK_RV rv = generate_wrapping_key(session, 32, &wrapping_key);
     if (rv != CKR_OK) {
@@ -212,7 +215,7 @@ int aes_wrap(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    CK_BYTE_PTR wrapped_key = malloc(wrapped_len);
+    wrapped_key = malloc(wrapped_len);
     if (NULL == wrapped_key) {
         printf("Could not allocate memory to hold wrapped key\n");
         goto done;
@@ -225,7 +228,6 @@ int aes_wrap(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    unsigned char *hex_array = NULL;
     bytes_to_new_hexstring(wrapped_key, wrapped_len, &hex_array);
     if (!hex_array) {
         printf("Could not allocate hex array\n");

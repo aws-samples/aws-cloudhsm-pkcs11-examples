@@ -34,9 +34,9 @@ CK_RV generate_aes_key(CK_SESSION_HANDLE session,
     mech.pParameter = NULL;
 
     CK_ATTRIBUTE template[] = {
-            {CKA_TOKEN,     &false,             sizeof(CK_BBOOL)},
-            {CKA_ENCRYPT,   &true,            sizeof(CK_BBOOL)},
-            {CKA_DECRYPT,   &true,            sizeof(CK_BBOOL)},
+            {CKA_TOKEN,     &false_val,             sizeof(CK_BBOOL)},
+            {CKA_ENCRYPT,   &true_val,            sizeof(CK_BBOOL)},
+            {CKA_DECRYPT,   &true_val,            sizeof(CK_BBOOL)},
             {CKA_VALUE_LEN, &key_length_bytes, sizeof(key_length_bytes)}
     };
 
@@ -62,15 +62,15 @@ CK_RV generate_wrapping_keypair(CK_SESSION_HANDLE session,
     CK_BYTE public_exponent[] = {0x01, 0x00, 0x01};
 
     CK_ATTRIBUTE public_key_template[] = {
-            {CKA_TOKEN,           &true,           sizeof(CK_BBOOL)},
-            {CKA_WRAP,              &true, sizeof(CK_BBOOL)},
+            {CKA_TOKEN,           &true_val,           sizeof(CK_BBOOL)},
+            {CKA_WRAP,              &true_val, sizeof(CK_BBOOL)},
             {CKA_MODULUS_BITS,    &key_length_bits, sizeof(CK_ULONG)},
             {CKA_PUBLIC_EXPONENT, &public_exponent, sizeof(public_exponent)},
     };
 
     CK_ATTRIBUTE private_key_template[] = {
-            {CKA_TOKEN,       &true, sizeof(CK_BBOOL)},
-            {CKA_UNWRAP,              &true, sizeof(CK_BBOOL)},
+            {CKA_TOKEN,       &true_val, sizeof(CK_BBOOL)},
+            {CKA_UNWRAP,              &true_val, sizeof(CK_BBOOL)},
     };
 
     rv = funcs->C_GenerateKeyPair(session,
@@ -143,8 +143,8 @@ CK_RV rsa_oaep_unwrap_key(
             template = (CK_ATTRIBUTE[]) {
                     {CKA_CLASS,       &key_class,        sizeof(key_class)},
                     {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
-                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
-                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)}
+                    {CKA_TOKEN,       &false_val,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,             sizeof(CK_BBOOL)}
             };
             template_count = 4;
             break;
@@ -153,8 +153,8 @@ CK_RV rsa_oaep_unwrap_key(
             template = (CK_ATTRIBUTE[]) {
                     {CKA_CLASS,       &key_class,        sizeof(key_class)},
                     {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
-                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
-                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)},
+                    {CKA_TOKEN,       &false_val,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,             sizeof(CK_BBOOL)},
             };
             template_count = 4;
             break;
@@ -163,8 +163,8 @@ CK_RV rsa_oaep_unwrap_key(
             template = (CK_ATTRIBUTE[]) {
                     {CKA_CLASS,       &key_class,        sizeof(key_class)},
                     {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
-                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
-                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)},
+                    {CKA_TOKEN,       &false_val,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,             sizeof(CK_BBOOL)},
             };
             template_count = 4;
             break;
@@ -247,8 +247,8 @@ CK_RV rsa_aes_unwrap_key(
             template = (CK_ATTRIBUTE[]) {
                     {CKA_CLASS,       &key_class,        sizeof(key_class)},
                     {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
-                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
-                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)}
+                    {CKA_TOKEN,       &false_val,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,             sizeof(CK_BBOOL)}
             };
             template_count = 4;
             break;
@@ -257,8 +257,8 @@ CK_RV rsa_aes_unwrap_key(
             template = (CK_ATTRIBUTE[]) {
                     {CKA_CLASS,       &key_class,        sizeof(key_class)},
                     {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
-                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
-                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)},
+                    {CKA_TOKEN,       &false_val,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,             sizeof(CK_BBOOL)},
             };
             template_count = 4;
             break;
@@ -267,8 +267,8 @@ CK_RV rsa_aes_unwrap_key(
             template = (CK_ATTRIBUTE[]) {
                     {CKA_CLASS,       &key_class,        sizeof(key_class)},
                     {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
-                    {CKA_TOKEN,       &false,            sizeof(CK_BBOOL)},
-                    {CKA_EXTRACTABLE, &true,             sizeof(CK_BBOOL)},
+                    {CKA_TOKEN,       &false_val,            sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,             sizeof(CK_BBOOL)},
             };
             template_count = 4;
             break;
@@ -291,6 +291,10 @@ CK_RV rsa_aes_unwrap_key(
  * @return
  */
 int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
+    unsigned char *hex_array = NULL;
+    CK_BYTE_PTR wrapped_key = NULL;
+    CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
 
     // Generate a wrapping key.
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
@@ -301,8 +305,6 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
     }
 
     // Generate keys to be wrapped.
-    CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
-    CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
     rv = generate_wrapping_keypair(session, 2048, &rsa_public_key, &rsa_private_key);
     if (rv != CKR_OK) {
         printf("RSA key generation failed: %lu\n", rv);
@@ -317,7 +319,7 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    CK_BYTE_PTR wrapped_key = malloc(wrapped_len);
+    wrapped_key = malloc(wrapped_len);
     if (NULL == wrapped_key) {
         printf("Could not allocate memory to hold wrapped key\n");
         goto done;
@@ -330,7 +332,6 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    unsigned char *hex_array = NULL;
     bytes_to_new_hexstring(wrapped_key, wrapped_len, &hex_array);
     if (!hex_array) {
         printf("Could not allocate hex array\n");
@@ -385,6 +386,10 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
  * @return
  */
 int rsa_aes_wrap(CK_SESSION_HANDLE session) {
+    CK_BYTE_PTR wrapped_key = NULL;
+    unsigned char *hex_array = NULL;
+    CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
 
     // Generate a wrapping key.
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
@@ -395,8 +400,6 @@ int rsa_aes_wrap(CK_SESSION_HANDLE session) {
     }
 
     // Generate keys to be wrapped.
-    CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
-    CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
     rv = generate_wrapping_keypair(session, 2048, &rsa_public_key, &rsa_private_key);
     if (rv != CKR_OK) {
         printf("RSA key generation failed: %lu\n", rv);
@@ -411,7 +414,7 @@ int rsa_aes_wrap(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    CK_BYTE_PTR wrapped_key = malloc(wrapped_len);
+    wrapped_key = malloc(wrapped_len);
     if (NULL == wrapped_key) {
         printf("Could not allocate memory to hold wrapped key\n");
         goto done;
@@ -424,7 +427,6 @@ int rsa_aes_wrap(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    unsigned char *hex_array = NULL;
     bytes_to_new_hexstring(wrapped_key, wrapped_len, &hex_array);
     if (!hex_array) {
         printf("Could not allocate hex array\n");

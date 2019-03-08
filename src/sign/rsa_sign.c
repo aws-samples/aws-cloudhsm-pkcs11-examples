@@ -37,13 +37,13 @@ CK_RV generate_rsa_keypair(CK_SESSION_HANDLE session,
     mech.pParameter = NULL;
 
     CK_ATTRIBUTE public_key_template[] = {
-            {CKA_VERIFY,          &true,            sizeof(CK_BBOOL)},
+            {CKA_VERIFY,          &true_val,            sizeof(CK_BBOOL)},
             {CKA_MODULUS_BITS,    &key_length_bits, sizeof(CK_ULONG)},
             {CKA_PUBLIC_EXPONENT, &public_exponent, sizeof(public_exponent)},
     };
 
     CK_ATTRIBUTE private_key_template[] = {
-            {CKA_SIGN, &true, sizeof(CK_BBOOL)},
+            {CKA_SIGN, &true_val, sizeof(CK_BBOOL)},
     };
 
     rv = funcs->C_GenerateKeyPair(session,
