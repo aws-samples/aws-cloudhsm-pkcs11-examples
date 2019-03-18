@@ -18,6 +18,10 @@
 /*
  *  Sample code to import a RSA Public Key into a Luna, and then use that key to
  *  do RSA OAEP Key Wrapping to wrap and export a key that already exists in the HSM.
+ *
+ *  See the CloudHSM Migration Guide for more information.
+ *
+ *  https://s3.amazonaws.com/cloudhsmv2-software/CloudHsmClient/Docs/CloudHSMUpgradeGuide-latest.pdf
  */
 
 #include <sys/errno.h>
