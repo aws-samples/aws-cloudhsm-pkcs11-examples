@@ -39,7 +39,7 @@ CK_RV generateDigest( CK_SESSION_HANDLE session,
                       CK_ULONG_PTR digest_length )
 {
     CK_RV                   rv;
-    static CK_MECHANISM     mech;
+    CK_MECHANISM            mech;
 
     mech.mechanism      = mechanism;
     mech.ulParameterLen = 0;
@@ -121,5 +121,5 @@ done:
 
     pkcs11_finalize_session(session);
 
-    return 0;          
+    return 0;
 }
