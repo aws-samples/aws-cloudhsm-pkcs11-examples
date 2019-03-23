@@ -35,7 +35,7 @@ CK_RV find_by_attr(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE *template, CK_ULONG 
                    CK_OBJECT_HANDLE_PTR *hObject) {
     CK_RV rv;
 
-    if (NULL==hObject || NULL==template || NULL==count) {
+    if (NULL == hObject || NULL == template || NULL == count) {
         return CKR_ARGUMENTS_BAD;
     }
 
@@ -48,7 +48,7 @@ CK_RV find_by_attr(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE *template, CK_ULONG 
     CK_ULONG max_objects = 25;
     bool searching = 1;
     *count = 0;
-    while(searching) {
+    while (searching) {
         CK_ULONG found = 0;
         *hObject = realloc(*hObject, (*count + max_objects) * sizeof(CK_OBJECT_HANDLE));
         if (NULL == *hObject) {
@@ -101,9 +101,9 @@ CK_RV generate_aes_key(CK_SESSION_HANDLE session,
     CK_MECHANISM mech = {CKM_AES_KEY_GEN, NULL, 0};
 
     CK_ATTRIBUTE template[] = {
-            {CKA_SENSITIVE, &true_val,             sizeof(CK_BBOOL)},
-            {CKA_TOKEN,     &false_val,            sizeof(CK_BBOOL)},
-            {CKA_LABEL,     label,                  label_length},
+            {CKA_SENSITIVE, &true_val,         sizeof(CK_BBOOL)},
+            {CKA_TOKEN,     &false_val,        sizeof(CK_BBOOL)},
+            {CKA_LABEL,     label,             label_length},
             {CKA_VALUE_LEN, &key_length_bytes, sizeof(CK_ULONG)}
     };
 
@@ -128,7 +128,7 @@ CK_RV generate_rsa_keypair(CK_SESSION_HANDLE session,
     CK_BYTE public_exponent[] = {0x01, 0x00, 0x01};
 
     CK_ATTRIBUTE public_key_template[] = {
-            {CKA_VERIFY,          &true_val,            sizeof(CK_BBOOL)},
+            {CKA_VERIFY,          &true_val,        sizeof(CK_BBOOL)},
             {CKA_MODULUS_BITS,    &key_length_bits, sizeof(CK_ULONG)},
             {CKA_PUBLIC_EXPONENT, &public_exponent, sizeof(public_exponent)},
     };
@@ -248,8 +248,8 @@ void find_keys_by_search_template(CK_SESSION_HANDLE session) {
      */
     CK_OBJECT_CLASS class = CKO_PUBLIC_KEY;
     CK_ATTRIBUTE search_template[] = {
-            { CKA_CLASS, &class, sizeof(CK_OBJECT_CLASS)},
-            { CKA_MODULUS, modulus, template[0].ulValueLen },
+            {CKA_CLASS,   &class,  sizeof(CK_OBJECT_CLASS)},
+            {CKA_MODULUS, modulus, template[0].ulValueLen},
     };
 
     CK_ULONG count = 0;
@@ -261,7 +261,7 @@ void find_keys_by_search_template(CK_SESSION_HANDLE session) {
     }
 
     printf("Found %lu public key with modulus\n", count);
-    for(int i=0; i<count; i++) {
+    for (int i = 0; i < count; i++) {
         printf("Found key handle %lu\n", found_objects[i]);
     }
 

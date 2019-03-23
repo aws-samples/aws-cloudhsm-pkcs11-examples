@@ -31,19 +31,18 @@
  * @param digest_length
  * @return CK_RV
  */
-CK_RV generateDigest( CK_SESSION_HANDLE session,
-                      CK_MECHANISM_TYPE mechanism,
-                      CK_BYTE_PTR data,
-                      CK_ULONG data_length,
-                      CK_BYTE **digest,
-                      CK_ULONG_PTR digest_length )
-{
-    CK_RV                   rv;
-    CK_MECHANISM            mech;
+CK_RV generateDigest(CK_SESSION_HANDLE session,
+                     CK_MECHANISM_TYPE mechanism,
+                     CK_BYTE_PTR data,
+                     CK_ULONG data_length,
+                     CK_BYTE **digest,
+                     CK_ULONG_PTR digest_length) {
+    CK_RV rv;
+    CK_MECHANISM mech;
 
-    mech.mechanism      = mechanism;
+    mech.mechanism = mechanism;
     mech.ulParameterLen = 0;
-    mech.pParameter     = NULL;
+    mech.pParameter = NULL;
 
     rv = funcs->C_DigestInit(session, &mech);
     if (rv != CKR_OK) {
@@ -52,12 +51,12 @@ CK_RV generateDigest( CK_SESSION_HANDLE session,
 
     // C_Digest won't terminate the session if we just determine digest length.
     rv = funcs->C_Digest(session, data, data_length, NULL, digest_length);
-    if (CKR_OK!=rv) {
+    if (CKR_OK != rv) {
         return rv;
     }
 
     *digest = malloc(*digest_length);
-    if (NULL==*digest) {
+    if (NULL == *digest) {
         return CKR_HOST_MEMORY;
     }
 
@@ -65,8 +64,7 @@ CK_RV generateDigest( CK_SESSION_HANDLE session,
     return rv;
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
 
@@ -110,12 +108,12 @@ int main(int argc, char **argv)
     printf("Data: %s\n", data);
     printf("Digest: %s\n", hex_array);
 
-done:
-    if (NULL!=digest) {
+    done:
+    if (NULL != digest) {
         free(digest);
     }
 
-    if (NULL!=hex_array) {
+    if (NULL != hex_array) {
         free(hex_array);
     }
 
