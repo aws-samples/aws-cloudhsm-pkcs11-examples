@@ -1,5 +1,8 @@
 # aws-cloudhsm-pkcs11-examples
 
+[![Build Status](https://travis-ci.com/rday/aws-cloudhsm-pkcs11-examples.svg?branch=master)]
+(https://travis-ci.com/rday/aws-cloudhsm-pkcs11-examples)
+
 ## Building the examples
 
 ### Depedencies
