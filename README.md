@@ -1,7 +1,7 @@
 # aws-cloudhsm-pkcs11-examples
 
 
-[![Build Status](https://travis-ci.com/aws-samples/aws-cloudhsm-pkcs11-examples.svg?branch=master)](https://travis-ci.com/aws-samples/aws-cloudhsm-pkcs11-examples)
+[![Build Status](https://travis-ci.org/aws-samples/aws-cloudhsm-pkcs11-examples.svg?branch=master)](https://travis-ci.org/aws-samples/aws-cloudhsm-pkcs11-examples)
 
 ## Building the examples
 
