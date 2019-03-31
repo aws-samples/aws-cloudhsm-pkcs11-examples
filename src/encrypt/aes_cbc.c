@@ -28,7 +28,7 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     // Generate a 256 bit AES key.
     CK_OBJECT_HANDLE aes_key;
     rv = generate_aes_key(session, 32, &aes_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("AES key generation failed: %lu\n", rv);
         return;
     }
@@ -41,7 +41,8 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
 
     // Prepare the mechanism 
     // The IV is hardcoded to all 0x01 bytes for this example.
-    CK_BYTE iv[16] = {1, 1, 1, 1, 1, 1, 1};
+    CK_BYTE iv[16] = {0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+                      0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01};
     CK_MECHANISM mech = {CKM_AES_CBC_PAD, iv, 16};
 
     //**********************************************************************************************
@@ -49,7 +50,7 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     //**********************************************************************************************    
 
     rv = funcs->C_EncryptInit(session, &mech, aes_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("Encryption Init failed: %lu\n", rv);
         return;
     }
@@ -57,35 +58,30 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     // Determine how much memory will be required to hold the ciphertext.
     CK_ULONG ciphertext_length = 0;
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, NULL, &ciphertext_length);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("Encryption failed: %lu\n", rv);
         return;
     }
 
     // Allocate the required memory.
     CK_BYTE_PTR ciphertext = malloc(ciphertext_length);
-    if (NULL==ciphertext) {
+    if (NULL == ciphertext) {
         printf("Could not allocate memory for ciphertext\n");
         return;
     }
     memset(ciphertext, 0, ciphertext_length);
-    unsigned char *hex_array = NULL;
     CK_BYTE_PTR decrypted_ciphertext = NULL;
 
     // Encrypt the data.
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, ciphertext, &ciphertext_length);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("Encryption failed: %lu\n", rv);
         goto done;
     }
 
     // Print just the ciphertext in hex format
-    bytes_to_new_hexstring(ciphertext, ciphertext_length, &hex_array);
-    if (!hex_array) {
-        printf("Could not allocate memory for hex array\n");
-        goto done;
-    }
-    printf("Ciphertext: %s\n", hex_array);
+    printf("Ciphertext: ");
+    print_bytes_as_hex(ciphertext, ciphertext_length);
     printf("Ciphertext length: %lu\n", ciphertext_length);
 
     //**********************************************************************************************
@@ -93,7 +89,7 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     //**********************************************************************************************    
 
     rv = funcs->C_DecryptInit(session, &mech, aes_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("Decryption Init failed: %lu\n", rv);
         return;
     }
@@ -101,37 +97,34 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     // Determine how much memory is required to hold the decrypted text.
     CK_ULONG decrypted_ciphertext_length = 0;
     rv = funcs->C_Decrypt(session, ciphertext, ciphertext_length, NULL, &decrypted_ciphertext_length);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("Decryption failed: %lu\n", rv);
         goto done;
     }
 
     // Allocate memory for the decrypted ciphertext.
     decrypted_ciphertext = malloc(decrypted_ciphertext_length);
-    if (NULL==decrypted_ciphertext) {
+    if (NULL == decrypted_ciphertext) {
         printf("Could not allocate memory for decrypted ciphertext\n");
         goto done;
     }
 
     // Decrypt the ciphertext.
     rv = funcs->C_Decrypt(session, ciphertext, ciphertext_length, decrypted_ciphertext, &decrypted_ciphertext_length);
-    if (CKR_OK!=rv) {
+    if (CKR_OK != rv) {
         printf("Decryption failed: %lu\n", rv);
         goto done;
     }
 
-    printf("Decrypted text: %s\n", decrypted_ciphertext);
+    printf("Decrypted ciphertext: %.*s\n", (int)decrypted_ciphertext_length, decrypted_ciphertext);
+    printf("Decrypted ciphertext length: %lu\n", decrypted_ciphertext_length);
 
 done:
-    if (NULL!=decrypted_ciphertext) {
+    if (NULL != decrypted_ciphertext) {
         free(decrypted_ciphertext);
     }
 
-    if (NULL!=hex_array) {
-        free(hex_array);
-    }
-
-    if (NULL!=ciphertext) {
+    if (NULL != ciphertext) {
         free(ciphertext);
     }
 }
@@ -154,7 +147,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("\nEncrypt/Decrypt with AES CBC\n");
+    printf("\nEncrypt/Decrypt with AES CBC Pad\n");
     aes_cbc_sample(session);
 
     pkcs11_finalize_session(session);

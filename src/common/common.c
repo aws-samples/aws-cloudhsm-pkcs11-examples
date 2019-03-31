@@ -118,3 +118,22 @@ int bytes_to_new_hexstring(char *bytes, size_t bytes_len, unsigned char **hex_ar
 
     return 0;
 }
+
+/**
+ * Prints a byte array as a hex string.
+ * @param bytes
+ * @param bytes_len
+ * @return
+ */
+int print_bytes_as_hex(char *bytes, size_t bytes_len) {
+    if (!bytes || bytes_len < 1) {
+        return -1;
+    }
+
+    for (int i = 0; i < bytes_len; i++) {
+        printf("%02X", bytes[i]);
+    }
+    printf("\n");
+
+    return 0;
+}

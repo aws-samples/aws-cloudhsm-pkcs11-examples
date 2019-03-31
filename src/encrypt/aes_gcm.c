@@ -28,7 +28,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     // Generate a 256 bit AES key.
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
     rv = generate_aes_key(session, 32, &aes_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("AES key generation failed: %lu\n", rv);
         return;
     }
@@ -51,7 +51,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
 
     // Allocate memory to hold the HSM generated IV.
     CK_BYTE_PTR iv = malloc(AES_GCM_IV_SIZE);
-    if (NULL==iv) {
+    if (NULL == iv) {
         printf("Failed to allocate IV memory\n");
         return;
     }
@@ -73,12 +73,11 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     //********************************************************************************************** 
 
     rv = funcs->C_EncryptInit(session, &mech, aes_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("Encryption Init failed: %lu\n", rv);
         return;
     }
 
-    unsigned char *hex_array = NULL;
     CK_BYTE_PTR decrypted_ciphertext = NULL;
     CK_BYTE_PTR ciphertext = NULL;
 
@@ -88,14 +87,14 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     // The ciphertext will be prepended with the HSM generated IV
     // so the length must include the IV
     ciphertext_length += AES_GCM_IV_SIZE;
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("Failed to find GCM ciphertext length\n");
         goto done;
     }
 
     // Allocate memory to store the ciphertext.
     ciphertext = malloc(ciphertext_length);
-    if (NULL==ciphertext) {
+    if (NULL == ciphertext) {
         printf("Failed to allocate ciphertext memory\n");
         goto done;
     }
@@ -107,39 +106,25 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     // Prepend HSM generated IV to ciphertext buffer
     memcpy(ciphertext, iv, AES_GCM_IV_SIZE);
     ciphertext_length += AES_GCM_IV_SIZE;
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("Encryption failed: %lu\n", rv);
         goto done;
     }
 
     // Ciphertext buffer = IV || ciphertext || TAG
     // Print the HSM generated IV
-    bytes_to_new_hexstring(ciphertext, AES_GCM_IV_SIZE, &hex_array);
-    if (!hex_array) {
-        printf("Could not allocate hex array\n");
-        goto done;
-    }
-    printf("IV: %s\n", hex_array);
+    printf("IV: ");
+    print_bytes_as_hex(ciphertext, AES_GCM_IV_SIZE);
     printf("IV length: %d\n", AES_GCM_IV_SIZE);
 
     // Print just the ciphertext in hex format
-    bytes_to_new_hexstring(ciphertext + AES_GCM_IV_SIZE, ciphertext_length - AES_GCM_IV_SIZE - AES_GCM_TAG_SIZE,
-                           &hex_array);
-    if (!hex_array) {
-        printf("Could not allocate hex array\n");
-        goto done;
-    }
-    printf("Ciphertext: %s\n", hex_array);
+    printf("Ciphertext: ");
+    print_bytes_as_hex(ciphertext + AES_GCM_IV_SIZE, ciphertext_length - AES_GCM_IV_SIZE - AES_GCM_TAG_SIZE);
     printf("Ciphertext length: %lu\n", ciphertext_length - AES_GCM_IV_SIZE - AES_GCM_TAG_SIZE);
 
     // Print TAG in hex format
-    bytes_to_new_hexstring(ciphertext + AES_GCM_IV_SIZE + plaintext_length,
-                           ciphertext_length - AES_GCM_IV_SIZE - plaintext_length, &hex_array);
-    if (!hex_array) {
-        printf("Could not allocate hex array\n");
-        goto done;
-    }
-    printf("Tag: %s\n", hex_array);
+    printf("Tag: ");
+    print_bytes_as_hex(ciphertext + AES_GCM_IV_SIZE + plaintext_length, ciphertext_length - AES_GCM_IV_SIZE - plaintext_length);
     printf("Tag length: %lu\n", ciphertext_length - AES_GCM_IV_SIZE - plaintext_length);
 
     //**********************************************************************************************
@@ -169,7 +154,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
 
     // Allocate memory for the decrypted cipher text.
     decrypted_ciphertext = malloc(decrypted_ciphertext_length);
-    if (NULL==decrypted_ciphertext) {
+    if (NULL == decrypted_ciphertext) {
         printf("Could not allocate memory for decrypted ciphertext\n");
         goto done;
     }
@@ -181,22 +166,19 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
         printf("Decryption failed: %lu\n", rv);
         goto done;
     }
-    printf("Decrypted ciphertext: %s\n", decrypted_ciphertext);
+    printf("Decrypted ciphertext: %.*s\n", (int)decrypted_ciphertext_length, decrypted_ciphertext);
+    printf("Decrypted ciphertext length: %lu\n", decrypted_ciphertext_length);
 
 done:
-    if (NULL!=iv) {
+    if (NULL != iv) {
         free(iv);
     }
 
-    if (NULL!=hex_array) {
-        free(hex_array);
-    }
-
-    if (NULL!=ciphertext) {
+    if (NULL != ciphertext) {
         free(ciphertext);
     }
 
-    if (NULL!=decrypted_ciphertext) {
+    if (NULL != decrypted_ciphertext) {
         free(decrypted_ciphertext);
     }
 }
