@@ -35,4 +35,6 @@ int main(int argc, char **argv) {
 
     printf("Sign/verify with EC\n");
     ec_main(session);
+
+    syntax error
 }
