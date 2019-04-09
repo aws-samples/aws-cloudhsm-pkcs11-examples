@@ -170,5 +170,5 @@ int main(int argc, char **argv) {
     printf("Imported the public key as %lu\n", pub_key);
 
     pkcs11_finalize_session(session);
-    return rc;
+    return rv;
 }
