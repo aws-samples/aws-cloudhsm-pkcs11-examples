@@ -28,11 +28,15 @@ int main(int argc, char **argv) {
     rv = pkcs11_initialize(args.library);
     rv = pkcs11_open_session(args.pin, &session);
     if (rv != CKR_OK)
-        return 0;
+        return rv;
 
     printf("Sign/verify with RSA\n");
-    rsa_main(session);
+    rv = rsa_main(session);
+    if (rv != CKR_OK)
+        return rv;
 
     printf("Sign/verify with EC\n");
-    ec_main(session);
+    rv = ec_main(session);
+    if (rv != CKR_OK)
+        return rv;
 }

@@ -296,6 +296,8 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
     CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
 
+    uint8_t rc = 1;
+
     // Generate a wrapping key.
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
     CK_RV rv = generate_aes_key(session, 32, &aes_key);
@@ -349,7 +351,7 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
 
     printf("Unwrapped bytes as object %lu\n", unwrapped_handle);
 
-    uint8_t rc = 0;
+    rc = 0;
 
     done:
     if (NULL != wrapped_key) {
@@ -390,6 +392,8 @@ int rsa_aes_wrap(CK_SESSION_HANDLE session) {
     unsigned char *hex_array = NULL;
     CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
+   
+    uint8_t rc = 1;
 
     // Generate a wrapping key.
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
@@ -444,7 +448,7 @@ int rsa_aes_wrap(CK_SESSION_HANDLE session) {
 
     printf("Unwrapped bytes as object %lu\n", unwrapped_handle);
 
-    uint8_t rc = 0;
+    rc = 0;
 
     done:
     if (NULL != wrapped_key) {

@@ -132,6 +132,7 @@ int main(int argc, char **argv) {
         printf("AES key generated. Key handle: %lu\n", aes_key);
     } else {
         printf("AES key generation failed: %lu\n", rv);
+        return rv;
     }
 
     CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
@@ -142,6 +143,7 @@ int main(int argc, char **argv) {
         printf("RSA key generated. Public key handle: %lu, Private key handle: %lu\n", rsa_public_key, rsa_private_key);
     } else {
         printf("RSA key generation failed: %lu\n", rv);
+        return rv;
     }
 
     CK_OBJECT_HANDLE ec_public_key = CK_INVALID_HANDLE;
@@ -163,6 +165,7 @@ int main(int argc, char **argv) {
                ec_private_key);
     } else {
         printf("prime256v1 key generation failed: %lu\n", rv);
+        return rv;
     }
 
     rv = generate_ec_keypair(session, secp384r1, sizeof(secp384r1), &ec_public_key, &ec_private_key);
@@ -171,6 +174,7 @@ int main(int argc, char **argv) {
                ec_private_key);
     } else {
         printf("secp384r1 key generation failed: %lu\n", rv);
+        return rv;
     }
 
     pkcs11_finalize_session(session);

@@ -22,7 +22,7 @@
  * Encrypt and decrypt a string using AES GCM.
  * @param session Active PKCS#11 session.
  */
-void aes_gcm_sample(CK_SESSION_HANDLE session) {
+CK_RV aes_gcm_sample(CK_SESSION_HANDLE session) {
     CK_RV rv;
 
     // Generate a 256 bit AES key.
@@ -30,7 +30,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     rv = generate_aes_key(session, 32, &aes_key);
     if (CKR_OK != rv) {
         printf("AES key generation failed: %lu\n", rv);
-        return;
+        return rv;
     }
 
     CK_BYTE_PTR plaintext = "plaintext payload to encrypt";
@@ -53,7 +53,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     CK_BYTE_PTR iv = malloc(AES_GCM_IV_SIZE);
     if (NULL == iv) {
         printf("Failed to allocate IV memory\n");
-        return;
+        return rv;
     }
     memset(iv, 0, AES_GCM_IV_SIZE);
 
@@ -75,7 +75,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     rv = funcs->C_EncryptInit(session, &mech, aes_key);
     if (CKR_OK != rv) {
         printf("Encryption Init failed: %lu\n", rv);
-        return;
+        return rv;
     }
 
     CK_BYTE_PTR decrypted_ciphertext = NULL;
@@ -95,6 +95,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     // Allocate memory to store the ciphertext.
     ciphertext = malloc(ciphertext_length);
     if (NULL == ciphertext) {
+        rv = 1;
         printf("Failed to allocate ciphertext memory\n");
         goto done;
     }
@@ -139,7 +140,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     rv = funcs->C_DecryptInit(session, &mech, aes_key);
     if (rv != CKR_OK) {
         printf("Decryption Init failed: %lu\n", rv);
-        return;
+        return rv;
     }
 
     // Determine the length of decrypted ciphertext.
@@ -155,6 +156,7 @@ void aes_gcm_sample(CK_SESSION_HANDLE session) {
     // Allocate memory for the decrypted cipher text.
     decrypted_ciphertext = malloc(decrypted_ciphertext_length);
     if (NULL == decrypted_ciphertext) {
+        rv = 1;
         printf("Could not allocate memory for decrypted ciphertext\n");
         goto done;
     }
@@ -181,6 +183,7 @@ done:
     if (NULL != decrypted_ciphertext) {
         free(decrypted_ciphertext);
     }
+    return rv;
 }
 
 int main(int argc, char **argv) {

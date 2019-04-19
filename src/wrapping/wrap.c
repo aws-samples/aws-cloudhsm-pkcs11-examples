@@ -41,12 +41,21 @@ int main(int argc, char **argv) {
 
     printf("Running RSA wrap with OAEP padding...\n");
     rc = rsa_oaep_wrap(session);
+    if (CKR_OK != rc) {
+        return rc;
+    }
 
     printf("Running RSA AES wrap...\n");
     rc = rsa_aes_wrap(session);
+    if (CKR_OK != rc) {
+        return rc;
+    }
 
     printf("Running AES wrap...\n");
     rc = aes_wrap(session);
+    if (CKR_OK != rc) {
+        return rc;
+    }
 
     pkcs11_finalize_session(session);
     return rc;

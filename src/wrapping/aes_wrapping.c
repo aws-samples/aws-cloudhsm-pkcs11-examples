@@ -190,6 +190,7 @@ int aes_wrap(CK_SESSION_HANDLE session) {
     // Generate a wrapping key.
     unsigned char *hex_array = NULL;
     CK_BYTE_PTR wrapped_key = NULL;
+    int rc = 1;
 
     CK_OBJECT_HANDLE wrapping_key = CK_INVALID_HANDLE;
     CK_RV rv = generate_wrapping_key(session, 32, &wrapping_key);
@@ -245,7 +246,7 @@ int aes_wrap(CK_SESSION_HANDLE session) {
 
     printf("Unwrapped bytes as object %lu\n", unwrapped_handle);
 
-    int rc = 0;
+    rc = 0;
 
     done:
     if (NULL != wrapped_key) {
