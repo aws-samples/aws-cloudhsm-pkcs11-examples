@@ -22,7 +22,7 @@
  * Encrypt and decrypt a string using AES CBC.
  * @param session Active PKCS#11 session
  */
-void aes_cbc_sample(CK_SESSION_HANDLE session) {
+CK_RV aes_cbc_sample(CK_SESSION_HANDLE session) {
     CK_RV rv;
 
     // Generate a 256 bit AES key.
@@ -30,7 +30,7 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     rv = generate_aes_key(session, 32, &aes_key);
     if (CKR_OK != rv) {
         printf("AES key generation failed: %lu\n", rv);
-        return;
+        return rv;
     }
 
     CK_BYTE_PTR plaintext = "plaintext payload to encrypt";
@@ -52,7 +52,7 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     rv = funcs->C_EncryptInit(session, &mech, aes_key);
     if (CKR_OK != rv) {
         printf("Encryption Init failed: %lu\n", rv);
-        return;
+        return rv;
     }
 
     // Determine how much memory will be required to hold the ciphertext.
@@ -60,14 +60,14 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, NULL, &ciphertext_length);
     if (CKR_OK != rv) {
         printf("Encryption failed: %lu\n", rv);
-        return;
+        return rv;
     }
 
     // Allocate the required memory.
     CK_BYTE_PTR ciphertext = malloc(ciphertext_length);
     if (NULL == ciphertext) {
         printf("Could not allocate memory for ciphertext\n");
-        return;
+        return rv;
     }
     memset(ciphertext, 0, ciphertext_length);
     CK_BYTE_PTR decrypted_ciphertext = NULL;
@@ -91,7 +91,7 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     rv = funcs->C_DecryptInit(session, &mech, aes_key);
     if (CKR_OK != rv) {
         printf("Decryption Init failed: %lu\n", rv);
-        return;
+        return rv;
     }
 
     // Determine how much memory is required to hold the decrypted text.
@@ -105,6 +105,7 @@ void aes_cbc_sample(CK_SESSION_HANDLE session) {
     // Allocate memory for the decrypted ciphertext.
     decrypted_ciphertext = malloc(decrypted_ciphertext_length);
     if (NULL == decrypted_ciphertext) {
+        rv = 1;
         printf("Could not allocate memory for decrypted ciphertext\n");
         goto done;
     }
@@ -127,6 +128,7 @@ done:
     if (NULL != ciphertext) {
         free(ciphertext);
     }
+    return rv;
 }
 
 int main(int argc, char **argv) {
@@ -148,7 +150,10 @@ int main(int argc, char **argv) {
     }
 
     printf("\nEncrypt/Decrypt with AES CBC Pad\n");
-    aes_cbc_sample(session);
+    rv = aes_cbc_sample(session);
+    if (CKR_OK != rv) {
+        return rv;
+    }
 
     pkcs11_finalize_session(session);
 
