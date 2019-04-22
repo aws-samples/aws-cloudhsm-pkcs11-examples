@@ -28,7 +28,7 @@ project. Run make to build the examples.
 ```
 mkdir build/
 cd build/
-cmake ..
+cmake .. -DHSM_USER=<user> -DHSM_PASSWORD=<password>
 make
 ```
 
@@ -44,3 +44,8 @@ $ src/digest/digest
 	--pin <user:password>
 	[--library <path/to/pkcs11>]
 ```
+
+### Testing all samples:
+
+To run and test all samples, run the command ```make test```
+

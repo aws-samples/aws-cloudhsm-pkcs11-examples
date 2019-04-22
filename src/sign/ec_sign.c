@@ -80,6 +80,7 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
                privkey);
     } else {
         printf("secp256k1 key generation failed: %lu\n", rv);
+        return rv;
     }
 
     rv = generate_signature(session, privkey, mechanism,
@@ -95,6 +96,7 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
         printf("Signature: %s\n", hex_signature);
     } else {
         printf("Signature generation failed: %lu\n", rv);
+        return rv;
     }
 
     rv = verify_signature(session, pubkey, mechanism, data, data_length, signature, signature_length);
