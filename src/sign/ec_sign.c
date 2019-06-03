@@ -62,7 +62,7 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
     CK_ULONG signature_length = MAX_SIGNATURE_LENGTH;
 
     // Set the PKCS11 signature mechanism type.
-    CK_MECHANISM_TYPE mechanism = CKM_ECDSA;
+    CK_MECHANISM_TYPE mechanism = CKM_ECDSA_SHA1;
 
     /**
      * Curve OIDs generated using OpenSSL on the command line.
@@ -70,16 +70,16 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
      * of supported curves.
      * openssl ecparam -name prime256v1 -outform DER | hexdump -C
      */
-    CK_BYTE prime256k1[] = {0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
+    CK_BYTE prime256v1[] = {0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
 
     CK_OBJECT_HANDLE pubkey = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE privkey = CK_INVALID_HANDLE;
-    rv = generate_ec_keypair(session, prime256k1, sizeof(prime256k1), &pubkey, &privkey);
+    rv = generate_ec_keypair(session, prime256v1, sizeof(prime256v1), &pubkey, &privkey);
     if (rv == CKR_OK) {
-        printf("secp256k1 key generated. Public key handle: %lu, Private key handle: %lu\n", pubkey,
+        printf("prime256v1 key generated. Public key handle: %lu, Private key handle: %lu\n", pubkey,
                privkey);
     } else {
-        printf("secp256k1 key generation failed: %lu\n", rv);
+        printf("prime256v1 key generation failed: %lu\n", rv);
         return rv;
     }
 
