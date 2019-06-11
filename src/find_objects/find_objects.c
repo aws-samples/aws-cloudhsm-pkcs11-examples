@@ -268,6 +268,8 @@ CK_RV find_keys_by_search_template(CK_SESSION_HANDLE session) {
 
     free(found_objects);
     found_objects = NULL;
+    free(modulus);
+    modulus = NULL;
     return CKR_OK;
 }
 
