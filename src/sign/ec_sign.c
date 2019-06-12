@@ -94,6 +94,8 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
         }
         printf("Data: %s\n", data);
         printf("Signature: %s\n", hex_signature);
+        free(hex_signature);
+        hex_signature = NULL;
     } else {
         printf("Signature generation failed: %lu\n", rv);
         return rv;
