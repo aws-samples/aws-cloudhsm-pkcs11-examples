@@ -258,7 +258,7 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
     rv = funcs->C_Decrypt(session, ciphertext + AES_GCM_IV_SIZE, ciphertext_length - AES_GCM_IV_SIZE,
                           decrypted_ciphertext, &decrypted_ciphertext_length);
     if (rv != CKR_OK) {
-        printf(stderr, "Decryption failed: %lu\n", rv);
+        fprintf(stderr, "Decryption failed: %lu\n", rv);
         goto done;
     }
     printf("Decrypted ciphertext: %.*s\n", (int)decrypted_ciphertext_length, decrypted_ciphertext);
