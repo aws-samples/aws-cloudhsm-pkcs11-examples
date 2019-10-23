@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -42,7 +42,7 @@ CK_RV generate_ec_keypair(CK_SESSION_HANDLE session,
     CK_MECHANISM mech = {CKM_EC_KEY_PAIR_GEN, NULL, 0};
 
     CK_ATTRIBUTE public_key_template[] = {
-            {CKA_VERIFY,    &true_val,           sizeof(CK_BBOOL)},
+            {CKA_VERIFY, &true_val, sizeof(CK_BBOOL)},
             {CKA_EC_PARAMS, named_curve_oid, named_curve_oid_len},
             {CKA_TOKEN, &false_val, sizeof(CK_BBOOL)},
     };
@@ -310,7 +310,7 @@ int main(int argc, char **argv) {
 
     rv = generate_ecdh_derive_key(session, &ec_base_private_key, &ec_base_public_key, &derived_key);
     if (rv == CKR_OK) {
-        printf("Derive key generated.  Derive key handle: %lu\n", derived_key);
+        printf("Derive key generated. Derive key handle: %lu\n", derived_key);
     } else {
         fprintf(stderr, "Derive key generation failed: %lu\n", rv);
         return EXIT_FAILURE;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -29,7 +29,7 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
     // Generate a 256 bit AES key.
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
     rv = generate_aes_key(session, 32, &aes_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "AES key generation failed: %lu\n", rv);
         return rv;
     }
@@ -54,21 +54,21 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
     //**********************************************************************************************
 
     rv = funcs->C_EncryptInit(session, &mech, aes_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "Encryption Init failed: %lu\n", rv);
         return rv;
     }
 
     // Determine how much memory will be required to hold the ciphertext.
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, NULL, &ciphertext_length);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "Encryption failed: %lu\n", rv);
         return rv;
     }    
 
     // Allocate the required memory.
     CK_BYTE_PTR ciphertext = malloc(ciphertext_length);
-    if (NULL==ciphertext) {
+    if (NULL == ciphertext) {
         fprintf(stderr, "Could not allocate memory for ciphertext\n");
         rv = CKR_HOST_MEMORY;
         goto done;
@@ -78,7 +78,7 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
 
     // Encrypt the data.
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, ciphertext, &ciphertext_length);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "Encryption failed: %lu\n", rv);
         goto done;
     }
@@ -99,7 +99,7 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
     //**********************************************************************************************
 
     rv = funcs->C_DecryptInit(session, &mech, aes_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "Decryption Init failed: %lu\n", rv);
         return rv;
     }
@@ -107,14 +107,14 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
     // Determine how much memory is required to hold the decrypted text.
     CK_ULONG decrypted_ciphertext_length = 0;
     rv = funcs->C_Decrypt(session, ciphertext, ciphertext_length, NULL, &decrypted_ciphertext_length);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "Decryption failed: %lu\n", rv);
         goto done;
     }
 
     // Allocate memory for decrypted ciphertext.
     CK_BYTE_PTR decrypted_ciphertext = malloc(decrypted_ciphertext_length);
-    if (NULL==decrypted_ciphertext) {
+    if (NULL == decrypted_ciphertext) {
         fprintf(stderr, "Coud not allocate memory for decrypted ciphertext\n");
         rv = CKR_HOST_MEMORY;
         goto done;
@@ -122,7 +122,7 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
 
     // Decrypt the ciphertext.
     rv = funcs->C_Decrypt(session, ciphertext, ciphertext_length, decrypted_ciphertext, &decrypted_ciphertext_length);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "Decryption failed: %lu\n", rv);
         goto done;
     }
@@ -130,15 +130,15 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
     printf("Decrypted text: %s\n", decrypted_ciphertext);
 
 done:
-    if (NULL!=decrypted_ciphertext) {
+    if (NULL != decrypted_ciphertext) {
         free(decrypted_ciphertext);
     }
 
-    if (NULL!=hex_array) {
+    if (NULL != hex_array) {
         free(hex_array);
     }
 
-    if (NULL!=ciphertext) {
+    if (NULL != ciphertext) {
         free(ciphertext);
     }
     return rv;
