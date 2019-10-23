@@ -83,7 +83,7 @@ CK_RV generate_ecdh_derive_key(CK_SESSION_HANDLE session,
     };
     rv = funcs->C_GetAttributeValue(session, *ec_base_public_key, point_template,
                                   sizeof(point_template) / sizeof(CK_ATTRIBUTE));
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
        fprintf(stderr, "Failed getting attribute value: %lu\n", rv);
        return rv;
     }
@@ -231,7 +231,7 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
     mech.pParameter = &params;
 
     rv = funcs->C_DecryptInit(session, &mech, *aes_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "Decryption Init failed: %lu\n", rv);
         goto done;
     }
@@ -241,7 +241,7 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
     rv = funcs->C_Decrypt(session, ciphertext + AES_GCM_IV_SIZE, ciphertext_length - AES_GCM_IV_SIZE,
                           NULL, &decrypted_ciphertext_length);
 
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "Decryption failed: %lu\n", rv);
         goto done;
     }
@@ -257,7 +257,7 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
     // Decrypt the ciphertext.
     rv = funcs->C_Decrypt(session, ciphertext + AES_GCM_IV_SIZE, ciphertext_length - AES_GCM_IV_SIZE,
                           decrypted_ciphertext, &decrypted_ciphertext_length);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "Decryption failed: %lu\n", rv);
         goto done;
     }
@@ -302,14 +302,14 @@ int main(int argc, char **argv) {
     */
     CK_BYTE prime256v1_derive[] = {0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
     rv = generate_ec_keypair(session, prime256v1_derive, sizeof(prime256v1_derive), &ec_base_public_key, &ec_base_private_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         fprintf(stderr, "prime256v1 key generation failed: %lu\n", rv);
         return EXIT_FAILURE;
     }
     CK_OBJECT_HANDLE derived_key = CK_INVALID_HANDLE;
 
     rv = generate_ecdh_derive_key(session, &ec_base_private_key, &ec_base_public_key, &derived_key);
-    if (rv == CKR_OK) {
+    if (CKR_OK == rv) {
         printf("Derive key generated. Derive key handle: %lu\n", derived_key);
     } else {
         fprintf(stderr, "Derive key generation failed: %lu\n", rv);
