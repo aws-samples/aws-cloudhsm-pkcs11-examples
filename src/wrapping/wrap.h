@@ -26,6 +26,7 @@
 int rsa_aes_wrap(CK_SESSION_HANDLE session);
 int rsa_oaep_wrap(CK_SESSION_HANDLE session);
 int aes_wrap(CK_SESSION_HANDLE session);
+int aes_gcm_wrap(CK_SESSION_HANDLE session);
 CK_RV rsa_aes_unwrap_key(
         CK_SESSION_HANDLE session,
         CK_OBJECT_HANDLE wrapping_key,
