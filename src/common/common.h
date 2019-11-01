@@ -36,6 +36,7 @@ void pkcs11_finalize_session(CK_SESSION_HANDLE session);
 struct pkcs_arguments {
     char *pin;
     char *library;
+    CK_OBJECT_HANDLE wrapping_key_handle;
 };
 
 int get_pkcs_args(int argc, char **argv, struct pkcs_arguments *args);
