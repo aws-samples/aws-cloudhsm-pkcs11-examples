@@ -57,6 +57,12 @@ int main(int argc, char **argv) {
         return rc;
     }
 
+    printf("Running AES-GCM wrap...\n");
+    rc = aes_gcm_wrap(session);
+    if (CKR_OK != rc) {
+        return rc;
+    }
+
     pkcs11_finalize_session(session);
     return rc;
 }
