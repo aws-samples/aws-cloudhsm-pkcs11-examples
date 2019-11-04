@@ -56,7 +56,7 @@ CK_RV des_ecb_sample(CK_SESSION_HANDLE session) {
     CK_OBJECT_HANDLE des_key;
     rv = generate_des_key(session, &des_key);
     if (CKR_OK != rv) {
-        printf("DES key generation failed: %lu\n", rv);
+        fprintf(stderr, "DES key generation failed: %lu\n", rv);
         return rv;
     }
 
@@ -76,21 +76,21 @@ CK_RV des_ecb_sample(CK_SESSION_HANDLE session) {
 
     rv = funcs->C_EncryptInit(session, &mech, des_key);
     if (CKR_OK != rv) {
-        printf("Encryption Init failed: %lu\n", rv);
+        fprintf(stderr, "Encryption Init failed: %lu\n", rv);
         return rv;
     }
 
     // Determine how much memory will be required to hold the ciphertext.
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, NULL, &ciphertext_length);
     if (CKR_OK != rv) {
-        printf("Encryption failed: %lu\n", rv);
+        fprintf(stderr, "Encryption failed: %lu\n", rv);
         return rv;
     }
 
     // Allocate the required memory.
     CK_BYTE_PTR ciphertext = malloc(ciphertext_length);
     if (NULL == ciphertext) {
-        printf("Could not allocate memory for ciphertext\n");
+        fprintf(stderr, "Could not allocate memory for ciphertext\n");
         return rv;
     }
     memset(ciphertext, 0, ciphertext_length);
@@ -98,7 +98,7 @@ CK_RV des_ecb_sample(CK_SESSION_HANDLE session) {
     // Encrypt the data.
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, ciphertext, &ciphertext_length);
     if (CKR_OK != rv) {
-        printf("Encryption failed: %lu\n", rv);
+        fprintf(stderr, "Encryption failed: %lu\n", rv);
         goto done;
     }
 
@@ -113,7 +113,7 @@ CK_RV des_ecb_sample(CK_SESSION_HANDLE session) {
 
     rv = funcs->C_DecryptInit(session, &mech, des_key);
     if (CKR_OK != rv) {
-        printf("Decryption Init failed: %lu\n", rv);
+        fprintf(stderr, "Decryption Init failed: %lu\n", rv);
         return rv;
     }
 
@@ -122,7 +122,7 @@ CK_RV des_ecb_sample(CK_SESSION_HANDLE session) {
     CK_ULONG decrypted_ciphertext_length = 0;
     rv = funcs->C_Decrypt(session, ciphertext, ciphertext_length, NULL, &decrypted_ciphertext_length);
     if (CKR_OK != rv) {
-        printf("Decryption failed: %lu\n", rv);
+        fprintf(stderr, "Decryption failed: %lu\n", rv);
         goto done;
     }
 
@@ -130,14 +130,14 @@ CK_RV des_ecb_sample(CK_SESSION_HANDLE session) {
     decrypted_ciphertext = malloc(decrypted_ciphertext_length);
     if (NULL == decrypted_ciphertext) {
         rv = 1;
-        printf("Could not allocate memory for decrypted ciphertext\n");
+        fprintf(stderr, "Could not allocate memory for decrypted ciphertext\n");
         goto done;
     }
 
     // Decrypt the ciphertext.
     rv = funcs->C_Decrypt(session, ciphertext, ciphertext_length, decrypted_ciphertext, &decrypted_ciphertext_length);
     if (CKR_OK != rv) {
-        printf("Decryption failed: %lu\n", rv);
+        fprintf(stderr, "Decryption failed: %lu\n", rv);
         goto done;
     }
 
@@ -158,28 +158,30 @@ done:
 int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
+    int rc = EXIT_FAILURE;
 
     struct pkcs_arguments args = {};
     if (get_pkcs_args(argc, argv, &args) < 0) {
-        return 1;
+        return rc;
     }
 
     rv = pkcs11_initialize(args.library);
     if (CKR_OK != rv) {
-        return 1;
+        return rc;
     }
     rv = pkcs11_open_session(args.pin, &session);
     if (CKR_OK != rv) {
-        return 1;
+        return rc;
     }
 
     printf("\nEncrypt/Decrypt with DES ECB\n");
     rv = des_ecb_sample(session);
     if (CKR_OK != rv) {
-        return rv;
+        fprintf(stderr, "Failed des_ecb sample with rv=%lu\n", rv);
+        return rc;
     }
 
     pkcs11_finalize_session(session);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
