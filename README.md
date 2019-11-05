@@ -28,7 +28,7 @@ project. Run make to build the examples.
 ```
 mkdir build/
 cd build/
-cmake .. -DHSM_USER=<user> -DHSM_PASSWORD=<password>
+cmake .. -DHSM_USER=<user> -DHSM_PASSWORD=<password> -DTRUSTED_WRAPPING_KEY_HANDLE=<trusted_key>
 make
 ```
 
