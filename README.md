@@ -1,5 +1,8 @@
 # aws-cloudhsm-pkcs11-examples
 
+
+[![Build Status](https://travis-ci.org/aws-samples/aws-cloudhsm-pkcs11-examples.svg?branch=master)](https://travis-ci.org/aws-samples/aws-cloudhsm-pkcs11-examples)
+
 ## Building the examples
 
 ### Depedencies
@@ -25,7 +28,7 @@ project. Run make to build the examples.
 ```
 mkdir build/
 cd build/
-cmake ..
+cmake .. -DHSM_USER=<user> -DHSM_PASSWORD=<password> -DTRUSTED_WRAPPING_KEY_HANDLE=<trusted_key>
 make
 ```
 
@@ -41,3 +44,8 @@ $ src/digest/digest
 	--pin <user:password>
 	[--library <path/to/pkcs11>]
 ```
+
+### Testing all samples:
+
+To run and test all samples, run the command ```make test```
+

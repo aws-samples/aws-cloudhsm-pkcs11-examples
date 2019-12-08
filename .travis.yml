@@ -1,0 +1,6 @@
+sudo: false
+language: c
+dist: xenial
+
+script:
+  - scripts/build.sh

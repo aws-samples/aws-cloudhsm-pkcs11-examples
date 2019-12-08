@@ -42,11 +42,14 @@ const char *get_mechanism_name(CK_ULONG mechanism) {
  * @param slot_id
  * @return
  */
-int mechanisms(CK_SESSION_HANDLE session, CK_SLOT_ID slot_id) {
+CK_RV mechanisms(CK_SESSION_HANDLE session, CK_SLOT_ID slot_id) {
     CK_ULONG count;
     CK_MECHANISM_TYPE_PTR mech_list;
     CK_RV rv = funcs->C_GetMechanismList(slot_id, NULL, &count);
-    if ((CKR_OK == rv) && (count > 0)) {
+    if (CKR_OK != rv)
+        return rv;
+    
+    if (count > 0){
         mech_list = calloc(count, sizeof(CK_MECHANISM_TYPE));
         if (NULL == mech_list) {
             return -1;
@@ -88,7 +91,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    mechanisms(session, slot_id);
+    rv = mechanisms(session, slot_id);
+    if (CKR_OK != rv)
+        return rv;
 
     pkcs11_finalize_session(session);
 

@@ -150,13 +150,13 @@ CK_RV generate_rsa_keypair(CK_SESSION_HANDLE session,
  * Create two AES keys and find them with their labels.
  * @param session
  */
-void find_keys_with_label_example(CK_SESSION_HANDLE session) {
+CK_RV find_keys_with_label_example(CK_SESSION_HANDLE session) {
     CK_BYTE_PTR label1 = "First Label";
     CK_OBJECT_HANDLE aes_key_handle1 = CK_INVALID_HANDLE;
     CK_RV rv = generate_aes_key(session, 32, label1, strlen(label1), &aes_key_handle1);
     if (CKR_OK != rv) {
         fprintf(stderr, "Failed to generate an AES key: %lu\n", rv);
-        return;
+        return rv;
     }
 
     CK_BYTE_PTR label2 = "Second Label";
@@ -164,7 +164,7 @@ void find_keys_with_label_example(CK_SESSION_HANDLE session) {
     rv = generate_aes_key(session, 32, label2, strlen(label2), &aes_key_handle2);
     if (CKR_OK != rv) {
         fprintf(stderr, "Failed to generate an AES key: %lu\n", rv);
-        return;
+        return rv;
     }
 
     CK_ULONG count = 0;
@@ -176,7 +176,7 @@ void find_keys_with_label_example(CK_SESSION_HANDLE session) {
     rv = find_by_attr(session, attr, 1, &count, &found_objects);
     if (CKR_OK != rv) {
         fprintf(stderr, "Could not find label 1\n");
-        return;
+        return rv;
     }
 
     printf("Found label1 with handle %lu\n", found_objects[0]);
@@ -190,12 +190,13 @@ void find_keys_with_label_example(CK_SESSION_HANDLE session) {
     rv = find_by_attr(session, attr, 1, &count, &found_objects);
     if (CKR_OK != rv) {
         fprintf(stderr, "Could not find label 2\n");
-        return;
+        return rv;
     }
 
     printf("Found label2 with handle %lu\n", found_objects[0]);
     free(found_objects);
     found_objects = NULL;
+    return CKR_OK;
 }
 
 /**
@@ -203,7 +204,7 @@ void find_keys_with_label_example(CK_SESSION_HANDLE session) {
  * the modulus value.
  * @param session
  */
-void find_keys_by_search_template(CK_SESSION_HANDLE session) {
+CK_RV find_keys_by_search_template(CK_SESSION_HANDLE session) {
     /*
      * Create a key pair that we can search for.
      */
@@ -212,7 +213,7 @@ void find_keys_by_search_template(CK_SESSION_HANDLE session) {
     CK_RV rv = generate_rsa_keypair(session, 2048, &rsa_pub_key_handle, &rsa_priv_key_handle);
     if (CKR_OK != rv) {
         fprintf(stderr, "Failed to generate an AES key: %lu\n", rv);
-        return;
+        return rv;
     }
 
     printf("Generated %lu/%lu\n", rsa_pub_key_handle, rsa_priv_key_handle);
@@ -228,7 +229,7 @@ void find_keys_by_search_template(CK_SESSION_HANDLE session) {
     rv = funcs->C_GetAttributeValue(session, rsa_pub_key_handle, template, 1);
     if (CKR_OK != rv) {
         fprintf(stderr, "Could not read attributes from key: %lu\n", rsa_pub_key_handle);
-        return;
+        return rv;
     }
 
     CK_BYTE_PTR modulus = NULL;
@@ -238,7 +239,7 @@ void find_keys_by_search_template(CK_SESSION_HANDLE session) {
     rv = funcs->C_GetAttributeValue(session, rsa_pub_key_handle, template, 1);
     if (CKR_OK != rv) {
         fprintf(stderr, "Could not read attributes from key: %lu\n", rsa_pub_key_handle);
-        return;
+        return rv;
     }
 
     /*
@@ -257,7 +258,7 @@ void find_keys_by_search_template(CK_SESSION_HANDLE session) {
     rv = find_by_attr(session, search_template, 2, &count, &found_objects);
     if (CKR_OK != rv) {
         fprintf(stderr, "Could not find label 1\n");
-        return;
+        return rv;
     }
 
     printf("Found %lu public key with modulus\n", count);
@@ -267,6 +268,9 @@ void find_keys_by_search_template(CK_SESSION_HANDLE session) {
 
     free(found_objects);
     found_objects = NULL;
+    free(modulus);
+    modulus = NULL;
+    return CKR_OK;
 }
 
 int main(int argc, char **argv) {
@@ -289,8 +293,14 @@ int main(int argc, char **argv) {
     }
 
     printf("Searching for keys by label\n");
-    find_keys_with_label_example(session);
+    rv = find_keys_with_label_example(session);
+    if (CKR_OK != rv) {
+        return rv;
+    }
 
     printf("\n\nSearching for keys by modulus\n");
-    find_keys_by_search_template(session);
+    rv = find_keys_by_search_template(session);
+    if (CKR_OK != rv) {
+        return rv;
+    }
 }

@@ -36,12 +36,14 @@ int get_pkcs_args(int argc, char **argv, struct pkcs_arguments *args) {
     int c;
     char *pin = NULL;
     char *library = NULL;
+    char *wrapping_key_str = NULL;
 
     while (1) {
         static struct option long_options[] =
                 {
                         {"pin",     required_argument, 0, 0},
                         {"library", required_argument, 0, 0},
+                        {"wp_key",  required_argument, 0, 0},
                         {0, 0,                         0, 0}
                 };
 
@@ -62,6 +64,10 @@ int get_pkcs_args(int argc, char **argv, struct pkcs_arguments *args) {
                 library = optarg;
                 break;
 
+            case 2:
+                wrapping_key_str = optarg;
+                break;
+
             default:
                 printf("Unknown arguments");
                 show_help();
@@ -76,6 +82,11 @@ int get_pkcs_args(int argc, char **argv, struct pkcs_arguments *args) {
 
     args->pin = pin;
     args->library = library;
+
+    args->wrapping_key_handle = CK_INVALID_HANDLE;
+    if (wrapping_key_str != NULL) {
+        args->wrapping_key_handle = strtoul(wrapping_key_str, NULL, 0);
+    }
 
     // Default to the standard CloudHSM PKCS#11 library location.
     if (!args->library) {

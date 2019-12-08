@@ -119,5 +119,5 @@ int main(int argc, char **argv) {
 
     pkcs11_finalize_session(session);
 
-    return 0;
+    return rv;
 }

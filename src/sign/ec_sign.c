@@ -62,24 +62,25 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
     CK_ULONG signature_length = MAX_SIGNATURE_LENGTH;
 
     // Set the PKCS11 signature mechanism type.
-    CK_MECHANISM_TYPE mechanism = CKM_ECDSA;
+    CK_MECHANISM_TYPE mechanism = CKM_ECDSA_SHA1;
 
     /**
      * Curve OIDs generated using OpenSSL on the command line.
      * Visit https://docs.aws.amazon.com/cloudhsm/latest/userguide/pkcs11-key-types.html for a list
      * of supported curves.
-     * openssl ecparam -name secp256k1 -outform DER | hexdump -C
+     * openssl ecparam -name prime256v1 -outform DER | hexdump -C
      */
-    CK_BYTE secp256k1[] = {0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x0a};
+    CK_BYTE prime256v1[] = {0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
 
     CK_OBJECT_HANDLE pubkey = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE privkey = CK_INVALID_HANDLE;
-    rv = generate_ec_keypair(session, secp256k1, sizeof(secp256k1), &pubkey, &privkey);
+    rv = generate_ec_keypair(session, prime256v1, sizeof(prime256v1), &pubkey, &privkey);
     if (rv == CKR_OK) {
-        printf("secp256k1 key generated. Public key handle: %lu, Private key handle: %lu\n", pubkey,
+        printf("prime256v1 key generated. Public key handle: %lu, Private key handle: %lu\n", pubkey,
                privkey);
     } else {
-        printf("secp256k1 key generation failed: %lu\n", rv);
+        printf("prime256v1 key generation failed: %lu\n", rv);
+        return rv;
     }
 
     rv = generate_signature(session, privkey, mechanism,
@@ -93,8 +94,11 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
         }
         printf("Data: %s\n", data);
         printf("Signature: %s\n", hex_signature);
+        free(hex_signature);
+        hex_signature = NULL;
     } else {
         printf("Signature generation failed: %lu\n", rv);
+        return rv;
     }
 
     rv = verify_signature(session, pubkey, mechanism, data, data_length, signature, signature_length);
