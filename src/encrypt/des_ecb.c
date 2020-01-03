@@ -127,7 +127,7 @@ CK_RV des_ecb_sample(CK_SESSION_HANDLE session) {
     }
 
     // Allocate memory for the decrypted ciphertext.
-    decrypted_ciphertext = malloc(decrypted_ciphertext_length);
+    decrypted_ciphertext = malloc(decrypted_ciphertext_length + 1); //We want to null terminate the raw chars later
     if (NULL == decrypted_ciphertext) {
         rv = 1;
         fprintf(stderr, "Could not allocate memory for decrypted ciphertext\n");
@@ -140,8 +140,9 @@ CK_RV des_ecb_sample(CK_SESSION_HANDLE session) {
         fprintf(stderr, "Decryption failed: %lu\n", rv);
         goto done;
     }
+    decrypted_ciphertext[decrypted_ciphertext_length] = 0; // Turn the chars into a C-String via null termination
 
-    printf("Decrypted ciphertext: %.*s\n", (int)decrypted_ciphertext_length, decrypted_ciphertext);
+    printf("Decrypted ciphertext: %s\n", decrypted_ciphertext);
     printf("Decrypted ciphertext length: %lu\n", decrypted_ciphertext_length);
 
 done:

@@ -113,7 +113,7 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
     }
 
     // Allocate memory for decrypted ciphertext.
-    CK_BYTE_PTR decrypted_ciphertext = malloc(decrypted_ciphertext_length);
+    CK_BYTE_PTR decrypted_ciphertext = malloc(decrypted_ciphertext_length + 1); //We want to null terminate the raw chars later
     if (NULL == decrypted_ciphertext) {
         fprintf(stderr, "Coud not allocate memory for decrypted ciphertext\n");
         rv = CKR_HOST_MEMORY;
@@ -126,8 +126,10 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
         fprintf(stderr, "Decryption failed: %lu\n", rv);
         goto done;
     }
+    decrypted_ciphertext[decrypted_ciphertext_length] = 0; // Turn the chars into a C-String via null termination
 
-    printf("Decrypted text: %s\n", decrypted_ciphertext);
+    printf("Decrypted ciphertext: %s\n", decrypted_ciphertext);
+    printf("Decrypted ciphertext length: %lu\n", decrypted_ciphertext_length);
 
 done:
     if (NULL != decrypted_ciphertext) {
