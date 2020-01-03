@@ -127,7 +127,8 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    printf("Decrypted text: %s\n", decrypted_ciphertext);
+    printf("Decrypted ciphertext: %.*s\n", (int)decrypted_ciphertext_length, decrypted_ciphertext);
+    printf("Decrypted ciphertext length: %lu\n", decrypted_ciphertext_length);
 
 done:
     if (NULL != decrypted_ciphertext) {
