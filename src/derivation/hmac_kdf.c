@@ -90,7 +90,7 @@ CK_RV hmac_kdf_sample(CK_SESSION_HANDLE session) {
     /* 
      * Input 1: Counter format
      * Format of the iteration counter represented as a binary string.
-     * Only supported counter widths are 16, 32 and 64
+     * Only supported counter widths are 16 and 32
      */
     CK_SP800_108_COUNTER_FORMAT counter_format;
     counter_format.ulWidthInBits = 32;
