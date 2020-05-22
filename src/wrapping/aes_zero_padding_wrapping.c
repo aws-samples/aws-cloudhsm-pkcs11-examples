@@ -18,9 +18,9 @@
 #include <stdlib.h>
 #include <common.h>
 
-#include "aes_wrap_common.h"
+#include "aes_wrapping_common.h"
 
-CK_RV aes_pkcs5_padding_wrap(CK_SESSION_HANDLE session) {
+CK_RV aes_zero_padding_wrapping(CK_SESSION_HANDLE session) {
     unsigned char *hex_array = NULL;
     CK_BYTE_PTR wrapped_key = NULL;
 
@@ -41,12 +41,8 @@ CK_RV aes_pkcs5_padding_wrap(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    // AES Key Wrap with PKCS #5 Padding.
-    // This algorithm is not compliant with the PKCS #11 standard.
-    // See first known issue under https://docs.aws.amazon.com/cloudhsm/latest/userguide/KnownIssues.html#ki-all
-    // There is also an alias option from vendor defined mechanisms:
-    //  * CKM_CLOUDHSM_AES_KEY_WRAP_PKCS5_PAD
-    CK_MECHANISM mech = { CKM_AES_KEY_WRAP, NULL, 0 };
+    // AES Key Wrap with Zero Padding.
+    CK_MECHANISM mech = { CKM_AES_KEY_WRAP_PAD, NULL, 0 };
 
     // Determine how much space needs to be allocated for the wrapped key.
     CK_ULONG wrapped_len = 0;
@@ -62,7 +58,7 @@ CK_RV aes_pkcs5_padding_wrap(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    // Wrap the key with PKCS #5 Padding.
+    // Wrap the key with Zero Padding.
     rv = aes_wrap_key(session, &mech, wrapping_key, rsa_private_key, wrapped_key, &wrapped_len);
     if (rv != CKR_OK) {
         fprintf(stderr, "Could not wrap key: %lu\n", rv);
@@ -126,8 +122,8 @@ int main(int argc, char **argv) {
         return rc;
     }
 
-    printf("Running AES wrap with PKCS #5 Padding...\n");
-    rv = aes_pkcs5_padding_wrap(session);
+    printf("Running AES wrap with Zero Padding...\n");
+    rv = aes_zero_padding_wrapping(session);
     if (CKR_OK != rv) {
         return rc;
     }

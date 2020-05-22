@@ -18,9 +18,9 @@
 #include <stdlib.h>
 #include <common.h>
 
-#include "aes_wrap_common.h"
+#include "aes_wrapping_common.h"
 
-CK_RV aes_no_padding_wrap(CK_SESSION_HANDLE session) {
+CK_RV aes_pkcs5_padding_wrapping(CK_SESSION_HANDLE session) {
     unsigned char *hex_array = NULL;
     CK_BYTE_PTR wrapped_key = NULL;
 
@@ -32,23 +32,25 @@ CK_RV aes_no_padding_wrap(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    // Generate key to be wrapped.
-    // This mechanism does not add padding to the keys.
-    // Only works for byte-aligned keys such as AES, DES and byte-aligned RSA.
-    CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
-    rv = generate_aes_session_key(session, 32, &aes_key);
+    // Generate keys to be wrapped.
+    CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
+    rv = generate_rsa_keypair(session, 2048, &rsa_public_key, &rsa_private_key);
     if (rv != CKR_OK) {
-        fprintf(stderr, "AES key generation failed: %lu\n", rv);
+        fprintf(stderr, "RSA key generation failed: %lu\n", rv);
         goto done;
     }
 
-    // AES Key Wrap with No Padding.
-    // This is a vendor defined mechanism.
-    CK_MECHANISM mech = { CKM_CLOUDHSM_AES_KEY_WRAP_NO_PAD, NULL, 0 };
+    // AES Key Wrap with PKCS #5 Padding.
+    // This algorithm is not compliant with the PKCS #11 standard.
+    // See first known issue under https://docs.aws.amazon.com/cloudhsm/latest/userguide/KnownIssues.html#ki-all
+    // There is also an alias option from vendor defined mechanisms:
+    //  * CKM_CLOUDHSM_AES_KEY_WRAP_PKCS5_PAD
+    CK_MECHANISM mech = { CKM_AES_KEY_WRAP, NULL, 0 };
 
     // Determine how much space needs to be allocated for the wrapped key.
     CK_ULONG wrapped_len = 0;
-    rv = aes_wrap_key(session, &mech, wrapping_key, aes_key, NULL, &wrapped_len);
+    rv = aes_wrap_key(session, &mech, wrapping_key, rsa_private_key, NULL, &wrapped_len);
     if (rv != CKR_OK) {
         fprintf(stderr, "Could not determine size of wrapped key: %lu\n", rv);
         goto done;
@@ -60,8 +62,8 @@ CK_RV aes_no_padding_wrap(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    // Wrap the key with No Padding.
-    rv = aes_wrap_key(session, &mech, wrapping_key, aes_key, wrapped_key, &wrapped_len);
+    // Wrap the key with PKCS #5 Padding.
+    rv = aes_wrap_key(session, &mech, wrapping_key, rsa_private_key, wrapped_key, &wrapped_len);
     if (rv != CKR_OK) {
         fprintf(stderr, "Could not wrap key: %lu\n", rv);
         goto done;
@@ -77,7 +79,7 @@ CK_RV aes_no_padding_wrap(CK_SESSION_HANDLE session) {
 
     // Unwrap the key back into the HSM to verify everything worked.
     CK_OBJECT_HANDLE unwrapped_handle = CK_INVALID_HANDLE;
-    rv = aes_unwrap_key(session, &mech, wrapping_key, CKK_AES, wrapped_key, wrapped_len, &unwrapped_handle);
+    rv = aes_unwrap_key(session, &mech, wrapping_key, CKK_RSA, wrapped_key, wrapped_len, &unwrapped_handle);
     if (rv != CKR_OK) {
         fprintf(stderr, "Could not unwrap key: %lu\n", rv);
         goto done;
@@ -124,8 +126,8 @@ int main(int argc, char **argv) {
         return rc;
     }
 
-    printf("Running AES wrap with No Padding...\n");
-    rv = aes_no_padding_wrap(session);
+    printf("Running AES wrap with PKCS #5 Padding...\n");
+    rv = aes_pkcs5_padding_wrapping(session);
     if (CKR_OK != rv) {
         return rc;
     }

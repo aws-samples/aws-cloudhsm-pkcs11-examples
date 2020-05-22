@@ -18,11 +18,11 @@
 #include <stdlib.h>
 #include <common.h>
 
-#include "aes_wrap_common.h"
+#include "aes_wrapping_common.h"
 
 #define AES_GCM_IV_LEN_BYTES 12
 
-CK_RV aes_gcm_wrap(CK_SESSION_HANDLE session) {
+CK_RV aes_gcm_wrapping(CK_SESSION_HANDLE session) {
     // Generate a wrapping key.
     unsigned char *wrapped_key_iv_hex = NULL;
     unsigned char *wrapped_key_hex = NULL;
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Running AES-GCM wrap...\n");
-    rv = aes_gcm_wrap(session);
+    rv = aes_gcm_wrapping(session);
     if (CKR_OK != rv) {
         return rc;
     }
