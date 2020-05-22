@@ -33,6 +33,7 @@
 #define CKM_DES3_NIST_WRAP             (CKM_VENDOR_DEFINED | 0x00008000UL)
 #define CKM_CLOUDHSM_AES_GCM           (CKM_VENDOR_DEFINED | CKM_AES_GCM)
 
+// More information can be found at https://docs.aws.amazon.com/cloudhsm/latest/userguide/manage-aes-key-wrapping.html
 #define CKM_CLOUDHSM_AES_KEY_WRAP_NO_PAD        (CKM_VENDOR_DEFINED | CKM_AES_KEY_WRAP)
 #define CKM_CLOUDHSM_AES_KEY_WRAP_PKCS5_PAD     (CKM_VENDOR_DEFINED | CKM_AES_KEY_WRAP_PAD)
 #define CKM_CLOUDHSM_AES_KEY_WRAP_ZERO_PAD     (CKM_VENDOR_DEFINED | 0x0000216FUL)
