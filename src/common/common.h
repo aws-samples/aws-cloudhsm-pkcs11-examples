@@ -19,6 +19,7 @@
 
 #include <sys/types.h>
 #include <cryptoki.h>
+#include <cloudhsm_pkcs11_vendor_defs.h>
 
 #define MAX_SIGNATURE_LENGTH 256
 

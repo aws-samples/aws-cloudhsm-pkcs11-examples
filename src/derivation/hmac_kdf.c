@@ -22,7 +22,6 @@
 #include <stdint.h>
 
 #include "common.h"
-#include "cloudhsm_vendor_defines.h"
 
 CK_RV hmac_kdf_sample(CK_SESSION_HANDLE session) {
 
