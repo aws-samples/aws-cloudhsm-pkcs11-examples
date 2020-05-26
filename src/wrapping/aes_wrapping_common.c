@@ -13,9 +13,9 @@
  * @param key
  * @return
  */
-CK_RV generate_wrapping_key(CK_SESSION_HANDLE session,
-                            CK_ULONG key_length_bytes,
-                            CK_OBJECT_HANDLE_PTR key) {
+CK_RV generate_aes_token_key_for_wrapping(CK_SESSION_HANDLE session,
+                                          CK_ULONG key_length_bytes,
+                                          CK_OBJECT_HANDLE_PTR key) {
     CK_RV rv;
     CK_MECHANISM mech;
 
@@ -24,12 +24,36 @@ CK_RV generate_wrapping_key(CK_SESSION_HANDLE session,
     mech.pParameter = NULL;
 
     CK_ATTRIBUTE template[] = {
-            {CKA_TOKEN,     &true_val,             sizeof(CK_BBOOL)},
-            {CKA_WRAP,      &true_val,             sizeof(CK_BBOOL)},
-            {CKA_UNWRAP,    &true_val,             sizeof(CK_BBOOL)},
-            {CKA_ENCRYPT,   &false_val,            sizeof(CK_BBOOL)},
-            {CKA_DECRYPT,   &false_val,            sizeof(CK_BBOOL)},
-            {CKA_VALUE_LEN, &key_length_bytes, sizeof(key_length_bytes)}
+            {CKA_TOKEN,     &true_val,          sizeof(CK_BBOOL)},
+            {CKA_WRAP,      &true_val,          sizeof(CK_BBOOL)},
+            {CKA_UNWRAP,    &true_val,          sizeof(CK_BBOOL)},
+            {CKA_VALUE_LEN, &key_length_bytes,  sizeof(key_length_bytes)}
+    };
+
+    rv = funcs->C_GenerateKey(session, &mech, template, sizeof(template) / sizeof(CK_ATTRIBUTE), key);
+    return rv;
+}
+
+/**
+ * Generate an AES key.
+ * @param session
+ * @param key_length_bytes
+ * @param key
+ * @return
+ */
+CK_RV generate_aes_session_key(CK_SESSION_HANDLE session,
+                               CK_ULONG key_length_bytes,
+                               CK_OBJECT_HANDLE_PTR key) {
+    CK_RV rv;
+    CK_MECHANISM mech;
+
+    mech.mechanism = CKM_AES_KEY_GEN;
+    mech.ulParameterLen = 0;
+    mech.pParameter = NULL;
+
+    CK_ATTRIBUTE template[] = {
+            {CKA_TOKEN,     &false_val,         sizeof(CK_BBOOL)},
+            {CKA_VALUE_LEN, &key_length_bytes,  sizeof(key_length_bytes)}
     };
 
     rv = funcs->C_GenerateKey(session, &mech, template, sizeof(template) / sizeof(CK_ATTRIBUTE), key);
@@ -72,4 +96,96 @@ CK_RV generate_rsa_keypair(CK_SESSION_HANDLE session,
                                   public_key,
                                   private_key);
     return rv;
+}
+
+/**
+ * Wrap a key using the wrapping_key handle with given mechanism.
+ * The key being wrapped must have the CKA_EXTRACTABLE flag set to true.
+ * @param session
+ * @param mech
+ * @param wrapping_key
+ * @param key_to_wrap
+ * @param wrapped_bytes
+ * @param wrapped_bytes_len
+ * @return
+ */
+CK_RV aes_wrap_key(CK_SESSION_HANDLE session,
+                   CK_MECHANISM_PTR mech,
+                   CK_OBJECT_HANDLE wrapping_key,
+                   CK_OBJECT_HANDLE key_to_wrap,
+                   CK_BYTE_PTR wrapped_bytes,
+                   CK_ULONG_PTR wrapped_bytes_len) {
+    return funcs->C_WrapKey(
+            session,
+            mech,
+            wrapping_key,
+            key_to_wrap,
+            wrapped_bytes,
+            wrapped_bytes_len);
+}
+
+/**
+ * Unwrap a previously wrapped key into the HSM with given mechanism.
+ * @param session
+ * @param mech
+ * @param wrapping_key
+ * @param wrapped_key_type
+ * @param wrapped_bytes
+ * @param wrapped_bytes_len
+ * @param unwrapped_key_handle
+ * @return
+ */
+CK_RV aes_unwrap_key(CK_SESSION_HANDLE session,
+                     CK_MECHANISM_PTR mech,
+                     CK_OBJECT_HANDLE wrapping_key,
+                     CK_KEY_TYPE wrapped_key_type,
+                     CK_BYTE_PTR wrapped_bytes,
+                     CK_ULONG wrapped_bytes_len,
+                     CK_OBJECT_HANDLE_PTR unwrapped_key_handle) {
+    CK_OBJECT_CLASS key_class = CKO_SECRET_KEY;
+    CK_ATTRIBUTE *template = NULL;
+    CK_ULONG template_count = 0;
+
+    switch (wrapped_key_type) {
+        case CKK_DES3:
+        case CKK_AES:
+            template = (CK_ATTRIBUTE[]) {
+                    {CKA_CLASS,       &key_class,        sizeof(key_class)},
+                    {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
+                    {CKA_TOKEN,       &false_val,        sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,         sizeof(CK_BBOOL)}
+            };
+            template_count = 4;
+            break;
+        case CKK_RSA:
+            key_class = CKO_PRIVATE_KEY;
+            template = (CK_ATTRIBUTE[]) {
+                    {CKA_CLASS,       &key_class,        sizeof(key_class)},
+                    {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
+                    {CKA_TOKEN,       &false_val,        sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,         sizeof(CK_BBOOL)},
+            };
+            template_count = 4;
+            break;
+        case CKK_EC:
+            key_class = CKO_PRIVATE_KEY;
+            template = (CK_ATTRIBUTE[]) {
+                    {CKA_CLASS,       &key_class,        sizeof(key_class)},
+                    {CKA_KEY_TYPE,    &wrapped_key_type, sizeof(wrapped_key_type)},
+                    {CKA_TOKEN,       &false_val,        sizeof(CK_BBOOL)},
+                    {CKA_EXTRACTABLE, &true_val,         sizeof(CK_BBOOL)},
+            };
+            template_count = 4;
+            break;
+    }
+
+    return funcs->C_UnwrapKey(
+            session,
+            mech,
+            wrapping_key,
+            wrapped_bytes,
+            wrapped_bytes_len,
+            template,
+            template_count,
+            unwrapped_key_handle);
 }

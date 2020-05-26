@@ -20,16 +20,11 @@
 
 #include "aes_wrapping_common.h"
 
-#define AES_GCM_IV_LEN_BYTES 12
-
-CK_RV aes_gcm_wrapping(CK_SESSION_HANDLE session) {
-    // Generate a wrapping key.
-    unsigned char *wrapped_key_iv_hex = NULL;
-    unsigned char *wrapped_key_hex = NULL;
+CK_RV aes_zero_padding_wrapping(CK_SESSION_HANDLE session) {
+    unsigned char *hex_array = NULL;
     CK_BYTE_PTR wrapped_key = NULL;
-    CK_BYTE wrapped_key_iv[AES_GCM_IV_LEN_BYTES] = { 0 };
-    CK_ULONG wrapped_key_iv_len = sizeof(wrapped_key_iv);
 
+    // Generate a wrapping key.
     CK_OBJECT_HANDLE wrapping_key = CK_INVALID_HANDLE;
     CK_RV rv = generate_aes_token_key_for_wrapping(session, 32, &wrapping_key);
     if (rv != CKR_OK) {
@@ -46,8 +41,8 @@ CK_RV aes_gcm_wrapping(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    CK_GCM_PARAMS gcm_params = { wrapped_key_iv, wrapped_key_iv_len, 0, NULL, 0, 128 };
-    CK_MECHANISM mech = { CKM_AES_GCM, &gcm_params, sizeof(gcm_params) };
+    // AES Key Wrap with Zero Padding.
+    CK_MECHANISM mech = { CKM_AES_KEY_WRAP_PAD, NULL, 0 };
 
     // Determine how much space needs to be allocated for the wrapped key.
     CK_ULONG wrapped_len = 0;
@@ -63,7 +58,7 @@ CK_RV aes_gcm_wrapping(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    // Wrap the key with AES-GCM mechanism
+    // Wrap the key with Zero Padding.
     rv = aes_wrap_key(session, &mech, wrapping_key, rsa_private_key, wrapped_key, &wrapped_len);
     if (rv != CKR_OK) {
         fprintf(stderr, "Could not wrap key: %lu\n", rv);
@@ -71,18 +66,12 @@ CK_RV aes_gcm_wrapping(CK_SESSION_HANDLE session) {
     }
 
     // Display the hex string.
-    bytes_to_new_hexstring(wrapped_key_iv, wrapped_key_iv_len, &wrapped_key_iv_hex);
-    if (!wrapped_key_iv_hex) {
+    bytes_to_new_hexstring(wrapped_key, wrapped_len, &hex_array);
+    if (!hex_array) {
         fprintf(stderr, "Could not allocate hex array\n");
         goto done;
     }
-    bytes_to_new_hexstring(wrapped_key, wrapped_len, &wrapped_key_hex);
-    if (!wrapped_key_hex) {
-        fprintf(stderr, "Could not allocate hex array\n");
-        goto done;
-    }
-    printf("Wrapped Key IV: %s\n", wrapped_key_iv_hex);
-    printf("Wrapped Key: %s\n", wrapped_key_hex);
+    printf("Wrapped key: %s\n", hex_array);
 
     // Unwrap the key back into the HSM to verify everything worked.
     CK_OBJECT_HANDLE unwrapped_handle = CK_INVALID_HANDLE;
@@ -98,12 +87,8 @@ CK_RV aes_gcm_wrapping(CK_SESSION_HANDLE session) {
         free(wrapped_key);
     }
 
-    if (NULL != wrapped_key_iv_hex) {
-        free(wrapped_key_iv_hex);
-    }
-
-    if (NULL != wrapped_key_hex) {
-        free(wrapped_key_hex);
+    if (NULL != hex_array) {
+        free(hex_array);
     }
 
     // The wrapping key is a token key, so we have to clean it up.
@@ -131,13 +116,14 @@ int main(int argc, char **argv) {
     if (CKR_OK != rv) {
         return rc;
     }
+
     rv = pkcs11_open_session(args.pin, &session);
     if (CKR_OK != rv) {
         return rc;
     }
 
-    printf("Running AES-GCM wrap...\n");
-    rv = aes_gcm_wrapping(session);
+    printf("Running AES wrap with Zero Padding...\n");
+    rv = aes_zero_padding_wrapping(session);
     if (CKR_OK != rv) {
         return rc;
     }

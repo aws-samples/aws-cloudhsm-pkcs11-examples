@@ -1,10 +1,42 @@
-#ifndef _CLOUDHSM_VENDOR_DEFINES_H_
-#define _CLOUDHSM_VENDOR_DEFINES_H_
+/*
+ * Copyright (c) 2017, Cavium, Inc. All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the Cavium, Inc. nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY CAVIUM INC. ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL CAVIUM, INC. BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
 
-#include "pkcs11t.h"
+#ifndef _CLOUDHSM_PKCS11_VENDOR_DEFS_H_
+#define _CLOUDHSM_PKCS11_VENDOR_DEFS_H_
+
+#include "pkcs11.h"
 
 #define CKM_DES3_NIST_WRAP             (CKM_VENDOR_DEFINED | 0x00008000UL)
 #define CKM_CLOUDHSM_AES_GCM           (CKM_VENDOR_DEFINED | CKM_AES_GCM)
+
+// More information can be found at https://docs.aws.amazon.com/cloudhsm/latest/userguide/manage-aes-key-wrapping.html
+#define CKM_CLOUDHSM_AES_KEY_WRAP_NO_PAD        (CKM_VENDOR_DEFINED | CKM_AES_KEY_WRAP)
+#define CKM_CLOUDHSM_AES_KEY_WRAP_PKCS5_PAD     (CKM_VENDOR_DEFINED | CKM_AES_KEY_WRAP_PAD)
+#define CKM_CLOUDHSM_AES_KEY_WRAP_ZERO_PAD     (CKM_VENDOR_DEFINED | 0x0000216FUL)
 
 /* HMAC KDF Mechanism */
 #define CKM_SP800_108_COUNTER_KDF      (CKM_VENDOR_DEFINED | 0x00000001UL)
@@ -64,5 +96,4 @@ typedef struct CK_SP800_108_KDF_PARAMS {
  * and so on.
  */
 
-#endif
-
+#endif /* _CLOUDHSM_PKCS11_VENDOR_DEFS_H_ */

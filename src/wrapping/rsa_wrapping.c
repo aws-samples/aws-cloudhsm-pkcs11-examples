@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -14,7 +14,10 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "wrap.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <common.h>
 
 /**
  * Generate an AES key that can be wrapped by an RSA key.
@@ -290,26 +293,24 @@ CK_RV rsa_aes_unwrap_key(
  * @param session
  * @return
  */
-int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
+CK_RV rsa_oaep_wrap(CK_SESSION_HANDLE session) {
     unsigned char *hex_array = NULL;
     CK_BYTE_PTR wrapped_key = NULL;
     CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
 
-    uint8_t rc = 1;
-
     // Generate a wrapping key.
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
     CK_RV rv = generate_aes_key(session, 32, &aes_key);
     if (rv != CKR_OK) {
-        printf("Wrapping key generation failed: %lu\n", rv);
+        fprintf(stderr, "Wrapping key generation failed: %lu\n", rv);
         goto done;
     }
 
     // Generate keys to be wrapped.
     rv = generate_wrapping_keypair(session, 2048, &rsa_public_key, &rsa_private_key);
     if (rv != CKR_OK) {
-        printf("RSA key generation failed: %lu\n", rv);
+        fprintf(stderr, "RSA key generation failed: %lu\n", rv);
         goto done;
     }
 
@@ -317,26 +318,26 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
     CK_ULONG wrapped_len = 0;
     rv = rsa_oaep_wrap_key(session, rsa_public_key, aes_key, NULL, &wrapped_len);
     if (rv != CKR_OK) {
-        printf("Could not determine size of wrapped key: %lu\n", rv);
+        fprintf(stderr, "Could not determine size of wrapped key: %lu\n", rv);
         goto done;
     }
 
     wrapped_key = malloc(wrapped_len);
     if (NULL == wrapped_key) {
-        printf("Could not allocate memory to hold wrapped key\n");
+        fprintf(stderr, "Could not allocate memory to hold wrapped key\n");
         goto done;
     }
 
     // Wrap the key and display the hex string.
     rv = rsa_oaep_wrap_key(session, rsa_public_key, aes_key, wrapped_key, &wrapped_len);
     if (rv != CKR_OK) {
-        printf("Could not wrap key: %lu\n", rv);
+        fprintf(stderr, "Could not wrap key: %lu\n", rv);
         goto done;
     }
 
     bytes_to_new_hexstring(wrapped_key, wrapped_len, &hex_array);
     if (!hex_array) {
-        printf("Could not allocate hex array\n");
+        fprintf(stderr, "Could not allocate hex array\n");
         goto done;
     }
     printf("Wrapped key: %s\n", hex_array);
@@ -345,13 +346,10 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
     CK_OBJECT_HANDLE unwrapped_handle = CK_INVALID_HANDLE;
     rv = rsa_oaep_unwrap_key(session, rsa_private_key, CKK_AES, wrapped_key, wrapped_len, &unwrapped_handle);
     if (rv != CKR_OK) {
-        printf("Could not unwrap key: %lu\n", rv);
+        fprintf(stderr, "Could not unwrap key: %lu\n", rv);
         goto done;
     }
-
     printf("Unwrapped bytes as object %lu\n", unwrapped_handle);
-
-    rc = 0;
 
     done:
     if (NULL != wrapped_key) {
@@ -366,20 +364,18 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
     if (CK_INVALID_HANDLE != rsa_public_key) {
         rv = funcs->C_DestroyObject(session, rsa_public_key);
         if (CKR_OK != rv) {
-            printf("Could not delete rsa_public_key key: %lu\n", rv);
-            rc = 1;
+            fprintf(stderr, "Could not delete rsa_public_key key: %lu\n", rv);
         }
     }
 
     if (CK_INVALID_HANDLE != rsa_private_key) {
         rv = funcs->C_DestroyObject(session, rsa_private_key);
         if (CKR_OK != rv) {
-            printf("Could not delete rsa_private_key key: %lu\n", rv);
-            rc = 1;
+            fprintf(stderr, "Could not delete rsa_private_key key: %lu\n", rv);
         }
     }
 
-    return rc;
+    return rv;
 }
 
 /**
@@ -387,26 +383,24 @@ int rsa_oaep_wrap(CK_SESSION_HANDLE session) {
  * @param session
  * @return
  */
-int rsa_aes_wrap(CK_SESSION_HANDLE session) {
+CK_RV rsa_aes_wrap(CK_SESSION_HANDLE session) {
     CK_BYTE_PTR wrapped_key = NULL;
     unsigned char *hex_array = NULL;
     CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
-   
-    uint8_t rc = 1;
 
     // Generate a wrapping key.
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
     CK_RV rv = generate_aes_key(session, 32, &aes_key);
     if (rv != CKR_OK) {
-        printf("Wrapping key generation failed: %lu\n", rv);
+        fprintf(stderr, "Wrapping key generation failed: %lu\n", rv);
         goto done;
     }
 
     // Generate keys to be wrapped.
     rv = generate_wrapping_keypair(session, 2048, &rsa_public_key, &rsa_private_key);
     if (rv != CKR_OK) {
-        printf("RSA key generation failed: %lu\n", rv);
+        fprintf(stderr, "RSA key generation failed: %lu\n", rv);
         goto done;
     }
 
@@ -414,26 +408,26 @@ int rsa_aes_wrap(CK_SESSION_HANDLE session) {
     CK_ULONG wrapped_len = 0;
     rv = rsa_aes_wrap_key(session, rsa_public_key, aes_key, NULL, &wrapped_len);
     if (rv != CKR_OK) {
-        printf("Could not determine size of wrapped key: %lu\n", rv);
+        fprintf(stderr, "Could not determine size of wrapped key: %lu\n", rv);
         goto done;
     }
 
     wrapped_key = malloc(wrapped_len);
     if (NULL == wrapped_key) {
-        printf("Could not allocate memory to hold wrapped key\n");
+        fprintf(stderr, "Could not allocate memory to hold wrapped key\n");
         goto done;
     }
 
     // Wrap the key and display the hex string.
     rv = rsa_aes_wrap_key(session, rsa_public_key, aes_key, wrapped_key, &wrapped_len);
     if (rv != CKR_OK) {
-        printf("Could not wrap key: %lu\n", rv);
+        fprintf(stderr, "Could not wrap key: %lu\n", rv);
         goto done;
     }
 
     bytes_to_new_hexstring(wrapped_key, wrapped_len, &hex_array);
     if (!hex_array) {
-        printf("Could not allocate hex array\n");
+        fprintf(stderr, "Could not allocate hex array\n");
         goto done;
     }
     printf("Wrapped key: %s\n", hex_array);
@@ -442,13 +436,10 @@ int rsa_aes_wrap(CK_SESSION_HANDLE session) {
     CK_OBJECT_HANDLE unwrapped_handle = CK_INVALID_HANDLE;
     rv = rsa_aes_unwrap_key(session, rsa_private_key, CKK_AES, wrapped_key, wrapped_len, &unwrapped_handle);
     if (rv != CKR_OK) {
-        printf("Could not unwrap key: %lu\n", rv);
+        fprintf(stderr, "Could not unwrap key: %lu\n", rv);
         goto done;
     }
-
     printf("Unwrapped bytes as object %lu\n", unwrapped_handle);
-
-    rc = 0;
 
     done:
     if (NULL != wrapped_key) {
@@ -463,18 +454,53 @@ int rsa_aes_wrap(CK_SESSION_HANDLE session) {
     if (CK_INVALID_HANDLE != rsa_public_key) {
         rv = funcs->C_DestroyObject(session, rsa_public_key);
         if (CKR_OK != rv) {
-            printf("Could not delete rsa_public_key key: %lu\n", rv);
-            rc = 1;
+            fprintf(stderr, "Could not delete rsa_public_key key: %lu\n", rv);
         }
     }
 
     if (CK_INVALID_HANDLE != rsa_private_key) {
         rv = funcs->C_DestroyObject(session, rsa_private_key);
         if (CKR_OK != rv) {
-            printf("Could not delete rsa_private_key key: %lu\n", rv);
-            rc = 1;
+            fprintf(stderr, "Could not delete rsa_private_key key: %lu\n", rv);
         }
     }
 
-    return rc;
+    return rv;
+}
+
+int main(int argc, char **argv) {
+    CK_RV rv;
+    CK_SESSION_HANDLE session;
+    int rc = EXIT_FAILURE;
+
+    struct pkcs_arguments args = {};
+    if (get_pkcs_args(argc, argv, &args) < 0) {
+        return rc;
+    }
+
+    rv = pkcs11_initialize(args.library);
+    if (CKR_OK != rv) {
+        return rc;
+    }
+
+    rv = pkcs11_open_session(args.pin, &session);
+    if (CKR_OK != rv) {
+        return rc;
+    }
+
+    printf("Running RSA wrap with OAEP padding...\n");
+    rv = rsa_oaep_wrap(session);
+    if (CKR_OK != rv) {
+        return rc;
+    }
+
+    printf("Running RSA AES wrap...\n");
+    rv = rsa_aes_wrap(session);
+    if (CKR_OK != rv) {
+        return rc;
+    }
+
+    pkcs11_finalize_session(session);
+
+    return EXIT_SUCCESS;
 }
