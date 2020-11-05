@@ -42,6 +42,7 @@ CK_RV generate_random(CK_SESSION_HANDLE session) {
         print_bytes_as_hex(pRandomData, ulRandomLen);
     }
 
+    free(pRandomData);
     return rv;
 }
 
@@ -74,7 +75,7 @@ int main(int argc, char **argv) {
     rv = generate_random(session);
     if (CKR_OK != rv) {
         fprintf(stderr, "Random data generation failed with: %lu\n", rv);
-        return rv;
+        return rc;
     }
 
     pkcs11_finalize_session(session);
