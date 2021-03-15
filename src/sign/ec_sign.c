@@ -15,6 +15,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "sign.h"
+#include <string.h>
 
 #define MAX_SIGNATURE_LENGTH 256
 
@@ -56,7 +57,7 @@ CK_RV generate_ec_keypair(CK_SESSION_HANDLE session,
 CK_RV ec_sign_verify(CK_SESSION_HANDLE session) {
     CK_RV rv;
     CK_BYTE_PTR data = "Some data to sign";
-    CK_ULONG data_length = strlen(data);
+    CK_ULONG data_length = (CK_ULONG) strlen(data);
 
     CK_BYTE signature[MAX_SIGNATURE_LENGTH];
     CK_ULONG signature_length = MAX_SIGNATURE_LENGTH;
@@ -90,7 +91,7 @@ CK_RV ec_sign_verify(CK_SESSION_HANDLE session) {
         bytes_to_new_hexstring(signature, signature_length, &hex_signature);
         if (!hex_signature) {
             printf("Could not allocate hex array\n");
-            return 1;
+            return EXIT_FAILURE;
         }
         printf("Data: %s\n", data);
         printf("Signature: %s\n", hex_signature);
@@ -98,7 +99,7 @@ CK_RV ec_sign_verify(CK_SESSION_HANDLE session) {
         hex_signature = NULL;
     } else {
         printf("Signature generation failed: %lu\n", rv);
-        return rv;
+        return EXIT_FAILURE;
     }
 
     rv = verify_signature(session, pubkey, mechanism, data, data_length, signature, signature_length);
@@ -166,7 +167,7 @@ CK_RV multi_part_ec_sign_verify(CK_SESSION_HANDLE session) {
         printf("Verification successful\n");
     } else {
         printf("Verification failed: %lu\n", rv);
-        return rv;
+        return EXIT_FAILURE;
     }
 
     return 0;

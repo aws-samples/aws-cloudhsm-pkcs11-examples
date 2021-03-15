@@ -102,18 +102,18 @@ int load_pkcs11(char *soname)
     void *p11lib = dlopen(soname, RTLD_NOW | RTLD_GLOBAL);
     if (p11lib == NULL) {
         fprintf(stderr, "Failed to open PKCS11 shared object, %s: %s\n", soname, dlerror());
-        return 1;
+        return EXIT_FAILURE;
     }
     CK_RV (*getFuncList)(CK_FUNCTION_LIST_PTR_PTR);
     getFuncList = dlsym(p11lib, "C_GetFunctionList");
     if (getFuncList == NULL) {
         fprintf(stderr, "Failed to find C_GetFunctionList: %s\n", dlerror());
-        return 1;
+        return EXIT_FAILURE;
     }
     CK_RV rv = getFuncList(&p11Func);
     if (rv != CKR_OK) {
         fprintf(stderr, "C_GetFunctionList failed: %1$ld (0x%1$02lx)\n", rv);
-        return 1;
+        return EXIT_FAILURE;
     }
 
     return 0;

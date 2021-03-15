@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
     CK_SESSION_HANDLE session;
     int rc = EXIT_FAILURE;
 
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
         return rc;
     }

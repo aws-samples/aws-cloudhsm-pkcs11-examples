@@ -20,23 +20,26 @@ int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
 
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     rv = pkcs11_initialize(args.library);
+    if (rv != CKR_OK)
+        return EXIT_FAILURE;
+
     rv = pkcs11_open_session(args.pin, &session);
     if (CKR_OK != rv)
-        return rv;
+        return EXIT_FAILURE;
 
     printf("Sign/verify with RSA\n");
     rv = rsa_sign_verify(session);
     if (CKR_OK != rv)
-        return rv;
+        return EXIT_FAILURE;
 
     printf("Sign/verify with EC\n");
     rv = ec_sign_verify(session);
     if (CKR_OK != rv)
-        return rv;
+        return EXIT_FAILURE;
 }

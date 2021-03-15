@@ -54,7 +54,7 @@ CK_RV hmac_kdf_sample(CK_SESSION_HANDLE session) {
                               &base_key);
     if (CKR_OK != rv) {
         printf("Failed to generate base key\n");
-        return rv;
+        return EXIT_FAILURE;
     } else {
         printf("Generated base AES key of size 32 bytes. Handle: %lu\n", base_key);
     }
@@ -159,25 +159,25 @@ int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
 
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     rv = pkcs11_initialize(args.library);
     if (CKR_OK != rv) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     rv = pkcs11_open_session(args.pin, &session);
     if (CKR_OK != rv) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     printf("Key derivation using HMAC KDF in Counter mode. Defined in NIST SP 800-108.\n");
     rv = hmac_kdf_sample(session);
     if (CKR_OK != rv) {
-        return rv;
+        return EXIT_FAILURE;
     }
 
     pkcs11_finalize_session(session);

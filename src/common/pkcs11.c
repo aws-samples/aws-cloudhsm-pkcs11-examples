@@ -15,8 +15,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <stdio.h>
-#include <dlfcn.h>
 #include <string.h>
+
+// Header file needed to load shared libraries
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
 
 #include "common.h"
 
@@ -27,6 +33,33 @@ CK_FUNCTION_LIST *funcs;
  * @param library_path
  * @return
  */
+ #ifdef _WIN32
+CK_RV pkcs11_load_functions(char *library_path) {
+    CK_RV rv;
+    CK_RV(*pFunc)();
+    HINSTANCE hinstLib; 
+      
+    hinstLib = LoadLibrary(TEXT(library_path));
+    if (hinstLib == NULL) {
+        fprintf(stderr, "%s could not loaded. Check file exists.\n", library_path);
+        return CKR_GENERAL_ERROR;
+    }
+      
+    pFunc = (CK_RV (*)()) (intptr_t) GetProcAddress(hinstLib, "C_GetFunctionList"); 
+    if (pFunc == NULL) {
+        fprintf(stderr, "C_GetFunctionList() not found in module %s\n", library_path);
+        return CKR_FUNCTION_NOT_SUPPORTED;
+    }
+      
+    rv = pFunc(&funcs);
+    if (rv != CKR_OK) {
+        fprintf(stderr, "C_GetFunctionList() did not initialize correctly\n");
+        return rv;
+    }
+      
+    return CKR_OK;
+}
+#else
 CK_RV pkcs11_load_functions(char *library_path) {
     CK_RV rv;
     CK_RV(*pFunc)();
@@ -52,6 +85,7 @@ CK_RV pkcs11_load_functions(char *library_path) {
 
     return CKR_OK;
 }
+#endif
 
 /**
  * Initialize the PKCS#11 library.
@@ -135,7 +169,7 @@ CK_RV pkcs11_open_session(const CK_UTF8CHAR_PTR pin, CK_SESSION_HANDLE_PTR sessi
         return rv;
     }
 
-    rv = funcs->C_Login(*session, CKU_USER, pin, strlen(pin));
+    rv = funcs->C_Login(*session, CKU_USER, pin, (CK_ULONG) strlen(pin));
 
     return rv;
 }

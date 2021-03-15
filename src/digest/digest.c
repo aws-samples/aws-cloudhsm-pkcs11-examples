@@ -68,23 +68,23 @@ int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
 
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     rv = pkcs11_initialize(args.library);
     if (CKR_OK != rv) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     rv = pkcs11_open_session(args.pin, &session);
     if (CKR_OK != rv) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     CK_BYTE_PTR data = "Message requiring a digest";
-    CK_ULONG data_length = strlen(data);
+    CK_ULONG data_length = (CK_ULONG) strlen(data);
     CK_BYTE_PTR digest = NULL;
     CK_ULONG digest_length = 0;
 

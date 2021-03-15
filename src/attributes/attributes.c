@@ -165,25 +165,28 @@ CK_RV attributes_get(
          *    size in buf_len. */
         uint8_t *buf,
         /** [in, out] The size of buf. */
-        size_t *buf_len ) {
+        CK_ULONG_PTR buf_len ) {
     CK_ATTRIBUTE attr[] = { { type, NULL_PTR, (CK_ULONG)0 } };
     CK_RV rv = CKR_OK;
 
-    if (CK_INVALID_HANDLE == session)
+    if (CK_INVALID_HANDLE == session) {
         return CKR_ARGUMENTS_BAD;
+    }
 
-    if (CK_INVALID_HANDLE == object)
+    if (CK_INVALID_HANDLE == object) {
         return CKR_ARGUMENTS_BAD;
+    }
 
-    if (NULL == buf_len)
+    if (NULL == buf_len) {
         return CKR_ARGUMENTS_BAD;
+    }
 
     if (buf) {
         /* this assumes that buf_len is sufficiently large,
          * set buf to NULL to get the required size
          */
         attr[0].pValue = (CK_BYTE_PTR)buf;
-        attr[0].ulValueLen = (CK_ULONG)buf_len;
+        attr[0].ulValueLen = (CK_ULONG) *buf_len;
         rv = funcs->C_GetAttributeValue(
             session,
             object,
@@ -212,7 +215,7 @@ CK_RV attributes_get(
 /**
  * Output attribute value buffer in a formatted fashion.
  *
- * @returns 0 on success, 1 otherwise.
+ * @returns 0 on success, EXIT_FAILURE otherwise.
  */
 int attributes_output(
         /** [in] The input buffer. */
@@ -224,10 +227,10 @@ int attributes_output(
     size_t i = (size_t)0;
 
     if (NULL == buf)
-        return 1;
+        return EXIT_FAILURE;
 
     if (NULL == f)
-        return 1;
+        return EXIT_FAILURE;
 
     for (i = (size_t)0; i < buf_len; i++) {
         fprintf(f, "%02x ", buf[i]);
@@ -254,7 +257,14 @@ CK_RV attributes_output_all(
         CK_OBJECT_HANDLE object,
         /** [in] The output file handle. */
         FILE *f ) {
-    uint8_t attr_avail[attributes_types_len];
+
+    uint8_t* attr_avail = calloc(attributes_types_len, sizeof(uint8_t));
+    if (NULL == attr_avail) {
+        fprintf(f, "ERROR: failed to allocate memory\n");
+        rv = CKR_HOST_MEMORY;
+        break;
+    }
+
     size_t i = (size_t)0;
     CK_RV rv = CKR_OK;
 
@@ -266,8 +276,6 @@ CK_RV attributes_output_all(
 
     if (NULL == f)
         return CKR_ARGUMENTS_BAD;
-
-    memset(attr_avail, UINT8_C(0), sizeof(attr_avail));
 
     for (i = (size_t)0; i < attributes_types_len; i++) {
         CK_ATTRIBUTE attr[] = {
@@ -294,7 +302,7 @@ CK_RV attributes_output_all(
 
     for (i = (size_t)0; i < attributes_types_len; i++) {
         uint8_t *buf = NULL;
-        size_t buf_len = (size_t)0;
+        CK_ULONG buf_len = (CK_ULONG)0;
         CK_RV rv_local = CKR_OK;
 
         if( UINT8_C(0) == attr_avail[i] )
@@ -349,5 +357,6 @@ CK_RV attributes_output_all(
     attributes_output_all_1:
 
     fprintf(f, "\n");
+    free(attr_avail);
     return rv;
 }

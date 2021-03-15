@@ -34,10 +34,10 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session) {
     }
 
     CK_BYTE_PTR plaintext = "plaintext payload to encrypt";
-    CK_ULONG plaintext_length = strlen(plaintext);
+    CK_ULONG plaintext_length = (CK_ULONG) strlen(plaintext);
     CK_ULONG ciphertext_length = 0;
     CK_BYTE_PTR aad = "plaintext aad";
-    CK_ULONG aad_length = strlen(aad);
+    CK_ULONG aad_length = (CK_ULONG) strlen(aad);
 
     printf("Plaintext: %s\n", plaintext);
     printf("Plaintext length: %lu\n", plaintext_length);
@@ -193,18 +193,18 @@ int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
 
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     rv = pkcs11_initialize(args.library);
     if (CKR_OK != rv) {
-        return 1;
+        return EXIT_FAILURE;
     }
     rv = pkcs11_open_session(args.pin, &session);
     if (CKR_OK != rv) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     printf("\nEncrypt/Decrypt with AES GCM\n");

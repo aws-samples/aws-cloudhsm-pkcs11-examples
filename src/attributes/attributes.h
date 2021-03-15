@@ -38,7 +38,7 @@ CK_RV attributes_get(
         CK_OBJECT_HANDLE object,
         CK_ATTRIBUTE_TYPE type,
         uint8_t *buf,
-        size_t *buf_len );
+        CK_ULONG_PTR buf_len );
 
 int attributes_output(
         uint8_t *buf,

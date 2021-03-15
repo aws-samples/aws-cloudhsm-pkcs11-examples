@@ -24,6 +24,7 @@
  */
 CK_RV aes_ecb_sample(CK_SESSION_HANDLE session) {
     CK_RV rv;
+    CK_BYTE_PTR decrypted_ciphertext = NULL;
 
     // Generate a 256 bit AES key.
     CK_OBJECT_HANDLE aes_key;
@@ -34,7 +35,7 @@ CK_RV aes_ecb_sample(CK_SESSION_HANDLE session) {
     }
 
     CK_BYTE_PTR plaintext = "Data must be a 16 byte multiple.";
-    CK_ULONG plaintext_length = strlen(plaintext);
+    CK_ULONG plaintext_length = (CK_ULONG) strlen(plaintext);
     CK_ULONG ciphertext_length = 0;
 
     printf("Plaintext: %s\n", plaintext);
@@ -91,7 +92,6 @@ CK_RV aes_ecb_sample(CK_SESSION_HANDLE session) {
     }
 
     // Determine how much memory is required to hold the decrypted text.
-    CK_BYTE_PTR decrypted_ciphertext = NULL;
     CK_ULONG decrypted_ciphertext_length = 0;
     rv = funcs->C_Decrypt(session, ciphertext, ciphertext_length, NULL, &decrypted_ciphertext_length);
     if (CKR_OK != rv) {
@@ -133,24 +133,24 @@ int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
 
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     rv = pkcs11_initialize(args.library);
     if (CKR_OK != rv) {
-        return 1;
+        return EXIT_FAILURE;
     }
     rv = pkcs11_open_session(args.pin, &session);
     if (CKR_OK != rv) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     printf("\nEncrypt/Decrypt with AES ECB\n");
     rv = aes_ecb_sample(session);
     if (CKR_OK != rv) {
-        return rv;
+        return EXIT_FAILURE;
     }
 
     pkcs11_finalize_session(session);

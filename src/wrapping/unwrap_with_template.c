@@ -173,7 +173,7 @@ CK_RV get_attribute(
       CK_VOID_PTR attr_value
       ) {
 
-    CK_ATTRIBUTE attr = { };
+    CK_ATTRIBUTE attr = {0};
     attr.type = attr_type;
     attr.ulValueLen = sizeof(attr_value);
     attr.pValue = attr_value;
@@ -333,7 +333,7 @@ int main(int argc, char **argv) {
     CK_SESSION_HANDLE session;
     int rc = EXIT_FAILURE;
 
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
         return rc;
     }
