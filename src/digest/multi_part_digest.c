@@ -104,8 +104,8 @@ int main(int argc, char **argv) {
         if (NULL != digest) {
             free(digest);
         }
-    	pkcs11_finalize_session(session);
-    	return rc;
+        pkcs11_finalize_session(session);
+        return rc;
     }
 
     printf("Data: %s\n", data);
