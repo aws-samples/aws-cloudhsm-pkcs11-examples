@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
 
     rv = generate_aes_key(session, 32, &aes_key);
-    if (rv == CKR_OK) {
+    if (CKR_OK == rv) {
         printf("AES key generated. Key handle: %lu\n", aes_key);
     } else {
         printf("AES key generation failed: %lu\n", rv);

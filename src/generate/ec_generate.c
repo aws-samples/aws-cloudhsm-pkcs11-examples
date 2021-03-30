@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
     CK_BYTE secp384r1[] = {0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22};
 
     rv = generate_ec_keypair(session, prime256v1, sizeof(prime256v1), &ec_public_key, &ec_private_key);
-    if (rv == CKR_OK) {
+    if (CKR_OK == rv) {
         printf("prime256v1 key generated. Public key handle: %lu, Private key handle: %lu\n", ec_public_key,
                ec_private_key);
     } else {
@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
     }
 
     rv = generate_ec_keypair(session, secp384r1, sizeof(secp384r1), &ec_public_key, &ec_private_key);
-    if (rv == CKR_OK) {
+    if (CKR_OK == rv) {
         printf("secp384r1 key generated. Public key handle: %lu, Private key handle: %lu\n", ec_public_key,
                ec_private_key);
     } else {

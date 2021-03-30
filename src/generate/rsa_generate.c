@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
     CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
 
     rv = generate_rsa_keypair(session, 2048, &rsa_public_key, &rsa_private_key);
-    if (rv == CKR_OK) {
+    if (CKR_OK == rv) {
         printf("RSA key generated. Public key handle: %lu, Private key handle: %lu\n", rsa_public_key, rsa_private_key);
     } else {
         printf("RSA key generation failed: %lu\n", rv);
