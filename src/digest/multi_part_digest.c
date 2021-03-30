@@ -31,7 +31,7 @@
  * @param digest_length Length of the generated digest
  * @return CK_RV        PKCS11 return code
  */
-CK_RV generateMultiPartDigest(CK_SESSION_HANDLE session,
+CK_RV generate_multi_part_digest(CK_SESSION_HANDLE session,
                      CK_MECHANISM_TYPE mechanism,
                      CK_BYTE_PTR data,
                      CK_ULONG data_length,
@@ -45,15 +45,16 @@ CK_RV generateMultiPartDigest(CK_SESSION_HANDLE session,
     mech.pParameter = NULL;
 
     rv = funcs->C_DigestInit(session, &mech);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         return rv;
     }
 
     rv = funcs->C_DigestUpdate(session, data, data_length);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         return rv;
     }
 
+    // First determine the digest length by passing in a NULL buffer
     // C_DigestFinal won't terminate the session if we just determine digest length.
     rv = funcs->C_DigestFinal(session, NULL, digest_length);
     if (CKR_OK != rv) {
@@ -98,19 +99,15 @@ int main(int argc, char **argv) {
     // Supported types are kept up to date at https://docs.aws.amazon.com/cloudhsm/latest/userguide/pkcs11-mechanisms.html
     CK_MECHANISM_TYPE mechanism = CKM_SHA256;
 
-    rv = generateMultiPartDigest(session, mechanism, data, data_length, &digest, &digest_length);
-    if (CKR_OK != rv) {
+    rv = generate_multi_part_digest(session, mechanism, data, data_length, &digest, &digest_length);
+    if (CKR_OK == rv) {
+        printf("Data: %s\n", data);
+        printf("Digest: ");
+        print_bytes_as_hex(digest, digest_length);
+        rc = EXIT_SUCCESS;
+    } else {
         printf("Digest generation failed: %lu\n", rv);
-        if (NULL != digest) {
-            free(digest);
-        }
-        pkcs11_finalize_session(session);
-        return rc;
     }
-
-    printf("Data: %s\n", data);
-    printf("Digest: ");
-    print_bytes_as_hex(digest, digest_length);
 
     if (NULL != digest) {
         free(digest);
@@ -118,5 +115,5 @@ int main(int argc, char **argv) {
 
     pkcs11_finalize_session(session);
 
-    return EXIT_SUCCESS;
+    return rc;
 }
