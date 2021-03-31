@@ -1,9 +1,5 @@
 /*
-<<<<<<< HEAD
  * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-=======
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
->>>>>>> Clear ulIvBits in AES-GCM Mechanism parameters (#43)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -63,11 +59,7 @@ int main(int argc, char **argv) {
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
 
     rv = generate_aes_key(session, 32, &aes_key);
-<<<<<<< HEAD
     if (CKR_OK == rv) {
-=======
-    if (rv == CKR_OK) {
->>>>>>> Clear ulIvBits in AES-GCM Mechanism parameters (#43)
         printf("AES key generated. Key handle: %lu\n", aes_key);
     } else {
         printf("AES key generation failed: %lu\n", rv);
@@ -76,8 +68,4 @@ int main(int argc, char **argv) {
 
     pkcs11_finalize_session(session);
     return 0;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> Clear ulIvBits in AES-GCM Mechanism parameters (#43)
