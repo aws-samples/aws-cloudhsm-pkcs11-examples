@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -55,12 +55,12 @@ CK_RV generate_rsa_keypair(CK_SESSION_HANDLE session,
     return rv;
 }
 
-CK_RV rsa_main(CK_SESSION_HANDLE session) {
+CK_RV rsa_sign_verify(CK_SESSION_HANDLE session) {
     CK_OBJECT_HANDLE signing_public_key = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE signing_private_key = CK_INVALID_HANDLE;
 
     CK_RV rv = generate_rsa_keypair(session, 2048, &signing_public_key, &signing_private_key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         printf("RSA key generation failed: %lu\n", rv);
         return rv;
     }
@@ -72,11 +72,11 @@ CK_RV rsa_main(CK_SESSION_HANDLE session) {
     CK_ULONG signature_length = MAX_SIGNATURE_LENGTH;
 
     // Set the PKCS11 signature mechanism type.
-    CK_MECHANISM_TYPE mechanism = CKM_RSA_PKCS;
+    CK_MECHANISM_TYPE mechanism = CKM_SHA512_RSA_PKCS;
 
     rv = generate_signature(session, signing_private_key, mechanism,
                             data, data_length, signature, &signature_length);
-    if (rv == CKR_OK) {
+    if (CKR_OK == rv) {
         unsigned char *hex_signature = NULL;
         bytes_to_new_hexstring(signature, signature_length, &hex_signature);
         if (!hex_signature) {
@@ -95,7 +95,57 @@ CK_RV rsa_main(CK_SESSION_HANDLE session) {
 
     rv = verify_signature(session, signing_public_key, mechanism,
                           data, data_length, signature, signature_length);
-    if (rv == CKR_OK) {
+    if (CKR_OK == rv) {
+        printf("Verification successful\n");
+    } else {
+        printf("Verification failed: %lu\n", rv);
+        return rv;
+    }
+
+    return CKR_OK;
+}
+
+CK_RV multi_part_rsa_sign_verify(CK_SESSION_HANDLE session) {
+    CK_OBJECT_HANDLE signing_public_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE signing_private_key = CK_INVALID_HANDLE;
+
+    CK_RV rv = generate_rsa_keypair(session, 2048, &signing_public_key, &signing_private_key);
+    if (CKR_OK != rv) {
+        printf("RSA key generation failed: %lu\n", rv);
+        return rv;
+    }
+
+    CK_BYTE_PTR data = "Here is some data to sign";
+    CK_ULONG data_length = strlen(data);
+
+    CK_BYTE signature[MAX_SIGNATURE_LENGTH];
+    CK_ULONG signature_length = MAX_SIGNATURE_LENGTH;
+
+    // Set the PKCS11 signature mechanism type ().
+    CK_MECHANISM_TYPE mechanism = CKM_SHA512_RSA_PKCS;
+
+    rv = multi_part_generate_signature(session, signing_private_key, mechanism,
+                                       data, data_length, signature, &signature_length);
+    if (CKR_OK == rv) {
+        unsigned char *hex_signature = NULL;
+        bytes_to_new_hexstring(signature, signature_length, &hex_signature);
+        if (!hex_signature) {
+            printf("Could not allocate hex array\n");
+            return 1;
+        }
+
+        printf("Data: %s\n", data);
+        printf("Signature: %s\n", hex_signature);
+        free(hex_signature);
+        hex_signature = NULL;
+    } else {
+        printf("Signature generation failed: %lu\n", rv);
+        return rv;
+    }
+
+    rv = multi_part_verify_signature(session, signing_public_key, mechanism,
+                                     data, data_length, signature, signature_length);
+    if (CKR_OK == rv) {
         printf("Verification successful\n");
     } else {
         printf("Verification failed: %lu\n", rv);

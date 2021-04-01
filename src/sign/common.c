@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -17,12 +17,12 @@
 #include "sign.h"
 
 CK_RV generate_signature(CK_SESSION_HANDLE session,
-                                CK_OBJECT_HANDLE key,
-                                CK_MECHANISM_TYPE mechanism,
-                                CK_BYTE_PTR data,
-                                CK_ULONG data_length,
-                                CK_BYTE_PTR signature,
-                                CK_ULONG_PTR signature_length) {
+                         CK_OBJECT_HANDLE key,
+                         CK_MECHANISM_TYPE mechanism,
+                         CK_BYTE_PTR data,
+                         CK_ULONG data_length,
+                         CK_BYTE_PTR signature,
+                         CK_ULONG_PTR signature_length) {
     CK_RV rv;
     CK_MECHANISM mech;
 
@@ -31,7 +31,7 @@ CK_RV generate_signature(CK_SESSION_HANDLE session,
     mech.pParameter = NULL;
 
     rv = funcs->C_SignInit(session, &mech, key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         return !CKR_OK;
     }
 
@@ -39,13 +39,41 @@ CK_RV generate_signature(CK_SESSION_HANDLE session,
     return rv;
 }
 
+CK_RV multi_part_generate_signature(CK_SESSION_HANDLE session,
+                                    CK_OBJECT_HANDLE key,
+                                    CK_MECHANISM_TYPE mechanism,
+                                    CK_BYTE_PTR data,
+                                    CK_ULONG data_length,
+                                    CK_BYTE_PTR signature,
+                                    CK_ULONG_PTR signature_length) {
+    CK_RV rv;
+    CK_MECHANISM mech;
+
+    mech.mechanism = mechanism;
+    mech.ulParameterLen = 0;
+    mech.pParameter = NULL;
+
+    rv = funcs->C_SignInit(session, &mech, key);
+    if (CKR_OK != rv) {
+        return !CKR_OK;
+    }
+
+    rv = funcs->C_SignUpdate(session, data, data_length);
+    if (CKR_OK != rv) {
+        return !CKR_OK;
+    }
+
+    rv = funcs->C_SignFinal(session, signature, signature_length);
+    return rv;
+}
+
 CK_RV verify_signature(CK_SESSION_HANDLE session,
-                              CK_OBJECT_HANDLE key,
-                              CK_MECHANISM_TYPE mechanism,
-                              CK_BYTE_PTR data,
-                              CK_ULONG data_length,
-                              CK_BYTE_PTR signature,
-                              CK_ULONG signature_length) {
+                       CK_OBJECT_HANDLE key,
+                       CK_MECHANISM_TYPE mechanism,
+                       CK_BYTE_PTR data,
+                       CK_ULONG data_length,
+                       CK_BYTE_PTR signature,
+                       CK_ULONG signature_length) {
     CK_RV rv;
     CK_MECHANISM mech;
 
@@ -54,10 +82,38 @@ CK_RV verify_signature(CK_SESSION_HANDLE session,
     mech.pParameter = NULL;
 
     rv = funcs->C_VerifyInit(session, &mech, key);
-    if (rv != CKR_OK) {
+    if (CKR_OK != rv) {
         return !CKR_OK;
     }
 
     rv = funcs->C_Verify(session, data, data_length, signature, signature_length);
+    return rv;
+}
+
+CK_RV multi_part_verify_signature(CK_SESSION_HANDLE session,
+                                  CK_OBJECT_HANDLE key,
+                                  CK_MECHANISM_TYPE mechanism,
+                                  CK_BYTE_PTR data,
+                                  CK_ULONG data_length,
+                                  CK_BYTE_PTR signature,
+                                  CK_ULONG signature_length) {
+    CK_RV rv;
+    CK_MECHANISM mech;
+
+    mech.mechanism = mechanism;
+    mech.ulParameterLen = 0;
+    mech.pParameter = NULL;
+
+    rv = funcs->C_VerifyInit(session, &mech, key);
+    if (CKR_OK != rv) {
+        return !CKR_OK;
+    }
+
+    rv = funcs->C_VerifyUpdate(session, data, data_length);
+    if (CKR_OK != rv) {
+        return !CKR_OK;
+    }
+
+    rv = funcs->C_VerifyFinal(session, signature, signature_length);    
     return rv;
 }

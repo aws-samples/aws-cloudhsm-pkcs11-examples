@@ -29,14 +29,14 @@ int main(int argc, char **argv) {
     rv = pkcs11_open_session(args.pin, &session);
     if (CKR_OK != rv)
         return rv;
-
-    printf("Sign/verify with RSA\n");
-    rv = rsa_sign_verify(session);
+            
+    printf("Multi part sign/verify with RSA\n");
+    rv = multi_part_rsa_sign_verify(session);
     if (CKR_OK != rv)
         return rv;
-
-    printf("Sign/verify with EC\n");
-    rv = ec_sign_verify(session);
+        
+    printf("Multi part sign/verify with EC\n");
+    rv = multi_part_ec_sign_verify(session);
     if (CKR_OK != rv)
         return rv;
 }
