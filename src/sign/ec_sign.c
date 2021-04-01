@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -53,7 +53,7 @@ CK_RV generate_ec_keypair(CK_SESSION_HANDLE session,
     return rv;
 }
 
-CK_RV ec_main(CK_SESSION_HANDLE session) {
+CK_RV ec_sign_verify(CK_SESSION_HANDLE session) {
     CK_RV rv;
     CK_BYTE_PTR data = "Some data to sign";
     CK_ULONG data_length = strlen(data);
@@ -62,7 +62,7 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
     CK_ULONG signature_length = MAX_SIGNATURE_LENGTH;
 
     // Set the PKCS11 signature mechanism type.
-    CK_MECHANISM_TYPE mechanism = CKM_ECDSA_SHA1;
+    CK_MECHANISM_TYPE mechanism = CKM_ECDSA_SHA512;
 
     /**
      * Curve OIDs generated using OpenSSL on the command line.
@@ -75,9 +75,9 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
     CK_OBJECT_HANDLE pubkey = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE privkey = CK_INVALID_HANDLE;
     rv = generate_ec_keypair(session, prime256v1, sizeof(prime256v1), &pubkey, &privkey);
-    if (rv == CKR_OK) {
-        printf("prime256v1 key generated. Public key handle: %lu, Private key handle: %lu\n", pubkey,
-               privkey);
+    if (CKR_OK == rv) {
+        printf("prime256v1 key generated. Public key handle: %lu, Private key handle: %lu\n",
+            pubkey, privkey);
     } else {
         printf("prime256v1 key generation failed: %lu\n", rv);
         return rv;
@@ -85,7 +85,7 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
 
     rv = generate_signature(session, privkey, mechanism,
                            data, data_length, signature, &signature_length);
-    if (rv == CKR_OK) {
+    if (CKR_OK == rv) {
         unsigned char *hex_signature = NULL;
         bytes_to_new_hexstring(signature, signature_length, &hex_signature);
         if (!hex_signature) {
@@ -102,7 +102,67 @@ CK_RV ec_main(CK_SESSION_HANDLE session) {
     }
 
     rv = verify_signature(session, pubkey, mechanism, data, data_length, signature, signature_length);
-    if (rv == CKR_OK) {
+    if (CKR_OK == rv) {
+        printf("Verification successful\n");
+    } else {
+        printf("Verification failed: %lu\n", rv);
+        return rv;
+    }
+
+    return 0;
+}
+
+CK_RV multi_part_ec_sign_verify(CK_SESSION_HANDLE session) {
+    CK_RV rv;
+    CK_BYTE_PTR data = "Some data to sign";
+    CK_ULONG data_length = strlen(data);
+
+    CK_BYTE signature[MAX_SIGNATURE_LENGTH];
+    CK_ULONG signature_length = MAX_SIGNATURE_LENGTH;
+
+    // Set the PKCS11 signature mechanism type.
+    CK_MECHANISM_TYPE mechanism = CKM_ECDSA_SHA512;
+
+    /**
+     * Curve OIDs generated using OpenSSL on the command line.
+     * Visit https://docs.aws.amazon.com/cloudhsm/latest/userguide/pkcs11-key-types.html for a list
+     * of supported curves.
+     * openssl ecparam -name prime256v1 -outform DER | hexdump -C
+     */
+    CK_BYTE prime256v1[] = {0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
+
+    CK_OBJECT_HANDLE pubkey = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE privkey = CK_INVALID_HANDLE;
+    rv = generate_ec_keypair(session, prime256v1, sizeof(prime256v1), &pubkey, &privkey);
+    if (CKR_OK == rv) {
+        printf("prime256v1 key generated. Public key handle: %lu, Private key handle: %lu\n",
+            pubkey, privkey);
+    } else {
+        printf("prime256v1 key generation failed: %lu\n", rv);
+        return rv;
+    }
+
+    rv = multi_part_generate_signature(session, privkey, mechanism, data,
+                                       data_length, signature, &signature_length);
+    if (CKR_OK == rv) {
+        unsigned char *hex_signature = NULL;
+        bytes_to_new_hexstring(signature, signature_length, &hex_signature);
+        if (!hex_signature) {
+            printf("Could not allocate hex array\n");
+            return 1;
+        }
+        printf("Data: %s\n", data);
+        printf("Signature: %s\n", hex_signature);
+        free(hex_signature);
+        hex_signature = NULL;
+    } else {
+        printf("Signature generation failed: %lu\n", rv);
+        return rv;
+    }
+
+    rv = multi_part_verify_signature(session, pubkey, mechanism, data,
+                                     data_length, signature, signature_length);
+    if (CKR_OK == rv) {
         printf("Verification successful\n");
     } else {
         printf("Verification failed: %lu\n", rv);
