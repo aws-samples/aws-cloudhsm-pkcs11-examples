@@ -17,9 +17,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <dlfcn.h>
 
-#include "hsm_info.h"
+#include "mechanism_info.h"
 
 /**
  * Convert a mechanism code to a human readable string.
@@ -33,6 +32,7 @@ const char *get_mechanism_name(CK_ULONG mechanism) {
         }
     }
 
+    printf("Failed to find mechanism name for %lu\n", mechanism);
     return NULL;
 }
 
@@ -57,7 +57,7 @@ CK_RV mechanisms(CK_SESSION_HANDLE session, CK_SLOT_ID slot_id) {
 
         rv = funcs->C_GetMechanismList(slot_id, mech_list, &count);
         if (CKR_OK == rv) {
-            for (int i = 0; i < count; i++) {
+            for (CK_ULONG i = 0; i < count; i++) {
                 CK_MECHANISM_INFO mech;
                 rv = funcs->C_GetMechanismInfo(slot_id, mech_list[i], &mech);
                 if (CKR_OK == rv) {
@@ -76,24 +76,29 @@ int main(int argc, char **argv)
 {
     CK_SESSION_HANDLE session;
 
-    struct pkcs_arguments args = { };
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    pkcs11_initialize(args.library);
-    pkcs11_open_session(args.pin, &session);
+    if (CKR_OK != pkcs11_initialize(args.library)) {
+        return EXIT_FAILURE;
+    }
+
+    if (CKR_OK != pkcs11_open_session(args.pin, &session)) {
+        return EXIT_FAILURE;
+    }
 
     CK_SLOT_ID slot_id;
     CK_RV rv = pkcs11_get_slot(&slot_id);
     if (rv != CKR_OK) {
         printf("Could not find token in slot\n");
-        return 1;
+        return EXIT_FAILURE;
     }
 
     rv = mechanisms(session, slot_id);
     if (CKR_OK != rv)
-        return rv;
+        return EXIT_FAILURE;
 
     pkcs11_finalize_session(session);
 

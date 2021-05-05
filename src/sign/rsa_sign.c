@@ -15,6 +15,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "sign.h"
+#include <string.h>
 
 /**
  * Generate an RSA key pair suitable for signing data and verifying signatures.
@@ -66,7 +67,7 @@ CK_RV rsa_sign_verify(CK_SESSION_HANDLE session) {
     }
 
     CK_BYTE_PTR data = "Here is some data to sign";
-    CK_ULONG data_length = strlen(data);
+    CK_ULONG data_length = (CK_ULONG) strlen(data);
 
     CK_BYTE signature[MAX_SIGNATURE_LENGTH];
     CK_ULONG signature_length = MAX_SIGNATURE_LENGTH;
@@ -81,7 +82,7 @@ CK_RV rsa_sign_verify(CK_SESSION_HANDLE session) {
         bytes_to_new_hexstring(signature, signature_length, &hex_signature);
         if (!hex_signature) {
             printf("Could not allocate hex array\n");
-            return 1;
+            return EXIT_FAILURE;
         }
 
         printf("Data: %s\n", data);
@@ -90,7 +91,7 @@ CK_RV rsa_sign_verify(CK_SESSION_HANDLE session) {
         hex_signature = NULL;
     } else {
         printf("Signature generation failed: %lu\n", rv);
-        return rv;
+        return EXIT_FAILURE;
     }
 
     rv = verify_signature(session, signing_public_key, mechanism,
@@ -149,7 +150,7 @@ CK_RV multi_part_rsa_sign_verify(CK_SESSION_HANDLE session) {
         printf("Verification successful\n");
     } else {
         printf("Verification failed: %lu\n", rv);
-        return rv;
+        return EXIT_FAILURE;
     }
 
     return CKR_OK;

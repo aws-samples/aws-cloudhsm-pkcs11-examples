@@ -16,81 +16,73 @@
  */
 #include <stdio.h>
 #include <memory.h>
-#include <getopt.h>
 #include <stdlib.h>
 
+#include "gopt.h"
 #include "common.h"
+
+#ifdef _WIN32
+#define DEFAULT_PKCS11_LIBRARY_PATH "C:\\Program Files\\Amazon\\CloudHSM\\lib\\cloudhsm_pkcs11.dll"
+#else
+#define DEFAULT_PKCS11_LIBRARY_PATH "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so"
+#endif
 
 CK_BBOOL true_val = TRUE;
 CK_BBOOL false_val = FALSE;
 
-static void show_help() {
-    printf("\n\t--pin <user:password>\n\t[--library <path/to/pkcs11>]\n\n");
+static void show_help(void) {
+    printf("\n\t--pin <user:password>\n\t[--library <path/to/pkcs11>]\n");
 }
 
-int get_pkcs_args(int argc, char **argv, struct pkcs_arguments *args) {
-    if (!args || !argv) {
+int get_pkcs_args(int argc, char** argv, struct pkcs_arguments* args) {
+    if (!args || !argv || argc == 0) {
         return -1;
     }
 
-    int c;
-    char *pin = NULL;
-    char *library = NULL;
-    char *wrapping_key_str = NULL;
+    struct option options[5];
 
-    while (1) {
-        static struct option long_options[] =
-                {
-                        {"pin",     required_argument, 0, 0},
-                        {"library", required_argument, 0, 0},
-                        {"wp_key",  required_argument, 0, 0},
-                        {0, 0,                         0, 0}
-                };
+    options[0].long_name  = "pin";
+    options[0].short_name = 0;
+    options[0].flags      = GOPT_ARGUMENT_REQUIRED;
 
-        int option_index = 0;
+    options[1].long_name  = "library";
+    options[1].short_name = 0;
+    options[1].flags      = GOPT_ARGUMENT_REQUIRED;
 
-        c = getopt_long(argc, argv, "",
-                        long_options, &option_index);
+    options[2].long_name  = "wp_key";
+    options[2].short_name = 0;
+    options[2].flags      = GOPT_ARGUMENT_REQUIRED;
 
-        if (c == -1)
-            break;
+    options[3].long_name  = "object-id";
+    options[3].short_name = 0;
+    options[3].flags      = GOPT_ARGUMENT_REQUIRED;
 
-        switch (option_index) {
-            case 0:
-                pin = optarg;
-                break;
+    options[4].flags      = GOPT_LAST;
 
-            case 1:
-                library = optarg;
-                break;
+    gopt (argv, options);
 
-            case 2:
-                wrapping_key_str = optarg;
-                break;
-
-            default:
-                printf("Unknown arguments");
-                show_help();
-                return -1;
-        }
-    }
-
-    if (!pin) {
+    // Check for required argument, pin.
+    if (options[0].count != 1) {
         show_help();
         return -1;
     }
 
-    args->pin = pin;
-    args->library = library;
-
-    args->wrapping_key_handle = CK_INVALID_HANDLE;
-    if (wrapping_key_str != NULL) {
-        args->wrapping_key_handle = strtoul(wrapping_key_str, NULL, 0);
-    }
+    args->pin = options[0].argument;
+    args->library = options[1].argument;
 
     // Default to the standard CloudHSM PKCS#11 library location.
     if (!args->library) {
-        args->library = "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so";
+        args->library = DEFAULT_PKCS11_LIBRARY_PATH;
+    }
+
+    args->wrapping_key_handle = CK_INVALID_HANDLE;
+    if (options[2].argument) {
+        args->wrapping_key_handle = strtoul(options[2].argument, NULL, 0);
+    }
+
+    args->object_handle = CK_INVALID_HANDLE;
+    if (options[3].argument) {
+        args->object_handle = strtoul(options[3].argument, NULL, 0);
     }
 
     return 0;
@@ -121,8 +113,8 @@ int bytes_to_new_hexstring(char *bytes, size_t bytes_len, unsigned char **hex_ar
     *hex_array = tmp;
     memset(*hex_array, 0, bytes_len * 2 + 1);
 
-    char values[16] = "0123456789ABCDEF";
-    for (int i = 0, j = 0; i < bytes_len; i++, j += 2) {
+    char values[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+    for (size_t i = 0, j = 0; i < bytes_len; i++, j += 2) {
         *((*hex_array) + j) = values[bytes[i] >> 4 & 0x0f];
         *((*hex_array) + j + 1) = values[bytes[i] & 0x0f];
     }
@@ -141,7 +133,7 @@ int print_bytes_as_hex(char *bytes, size_t bytes_len) {
         return -1;
     }
 
-    for (int i = 0; i < bytes_len; i++) {
+    for (size_t i = 0; i < bytes_len; i++) {
         printf("%02X", bytes[i]);
     }
     printf("\n");

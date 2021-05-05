@@ -25,84 +25,35 @@
 #include <string.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include <getopt.h>
 
 #include "common.h"
 #include "destroy.h"
 
 void show_help()
 {
-    fprintf(stdout, "\n\t--object-id <object_id>\n\n");
+    fprintf(stdout, "\t--object-id <object_id>\n");
 }
 
 int main(int argc, char **argv)
 {
-    int c = 0;
-    char **argv_copy = NULL;
-    size_t i = (size_t)0;
-    size_t j = (size_t)0;
-    const char *object_id = "";
-    CK_OBJECT_HANDLE object_id_val = CK_INVALID_HANDLE;
     CK_RV rv = CKR_OK;
     CK_SESSION_HANDLE session;
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
 
-    while (1)
-    {
-        int option_index = 0;
-        static struct option long_options[] =
-        {
-            {"object-id", required_argument, 0, 0},
-            {"pin",     required_argument, 0, 0},
-            {"library", required_argument, 0, 0},
-            {0, 0, 0, 0}
-        };
-
-        c = getopt_long(argc, argv, "", long_options, &option_index);
-
-        if (c == -1)
-            break;
-
-        switch (option_index)
-        {
-            case 0:
-                object_id = optarg;
-                break;
-            default:
-                break;
-        }
-    }
-    optind = 0;
-
-    argv_copy = (char **)calloc((size_t)argc, sizeof(char *));
-    if( NULL == argv_copy )
-    {
-        fprintf(stdout, "Error: Failed to allocate memory\n");
-        return CKR_HOST_MEMORY;
-    }
-
-    for(i = (size_t)0; i < (size_t)argc; i++) {
-        if(0 == strcmp(argv[i], "--object-id")) {
-          i++;
-          continue;
-        }
-
-        argv_copy[j++] = argv[i];
-    }
-
-    if (get_pkcs_args(argc - 2, argv_copy, &args) < 0) {
-        free(argv_copy);
+    if (get_pkcs_args(argc, argv, &args) < 0 || args.object_handle == CK_INVALID_HANDLE) {
         show_help();
         return CKR_ARGUMENTS_BAD;
     }
 
-    free(argv_copy);
-    sscanf(object_id, "%lu", &object_id_val);
+    if (pkcs11_initialize(args.library) != CKR_OK) {
+        return EXIT_FAILURE;
+    }
 
-    rv = pkcs11_initialize(args.library);
-    rv = pkcs11_open_session(args.pin, &session);
+    if (pkcs11_open_session(args.pin, &session) != CKR_OK) {
+        return EXIT_FAILURE;
+    }
 
-    rv = destroy_object(session, object_id_val);
+    rv = destroy_object(session, args.object_handle);
     if (rv != CKR_OK) {
         fprintf(stdout, "ERROR: Failed to destroy Object: %lu\n", rv);
     }

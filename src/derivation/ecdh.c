@@ -126,10 +126,12 @@ CK_RV generate_ecdh_derive_key(CK_SESSION_HANDLE session,
 CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
     CK_RV rv;
     CK_BYTE_PTR plaintext = "plaintext payload to encrypt";
-    CK_ULONG plaintext_length = strlen(plaintext);
+    CK_ULONG plaintext_length = (CK_ULONG) strlen(plaintext);
     CK_ULONG ciphertext_length = 0;
     CK_BYTE_PTR aad = "plaintext aad";
-    CK_ULONG aad_length = strlen(aad);
+    CK_ULONG aad_length = (CK_ULONG) strlen(aad);
+    CK_BYTE_PTR decrypted_ciphertext = NULL;
+    CK_BYTE_PTR ciphertext = NULL;
 
     printf("Plaintext: %s\n", plaintext);
     printf("Plaintext length: %lu\n", plaintext_length);
@@ -170,9 +172,6 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
         fprintf(stderr, "Encryption Init failed: %lu\n", rv);
         goto done;
     }
-
-    CK_BYTE_PTR decrypted_ciphertext = NULL;
-    CK_BYTE_PTR ciphertext = NULL;
 
     // Determine how much memory is required to store the ciphertext.
     rv = funcs->C_Encrypt(session, plaintext, plaintext_length, NULL, &ciphertext_length);
@@ -283,13 +282,18 @@ int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
 
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
         return EXIT_FAILURE;
     }
 
-    rv = pkcs11_initialize(args.library);
-    rv = pkcs11_open_session(args.pin, &session);
+    if (CKR_OK != pkcs11_initialize(args.library)) {
+        return EXIT_FAILURE;
+    }
+
+    if (CKR_OK != pkcs11_open_session(args.pin, &session)) {
+        return EXIT_FAILURE;
+    }
 
     CK_OBJECT_HANDLE ec_base_public_key = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE ec_base_private_key = CK_INVALID_HANDLE;

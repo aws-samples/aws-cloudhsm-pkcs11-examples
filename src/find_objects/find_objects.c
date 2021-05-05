@@ -153,7 +153,7 @@ CK_RV generate_rsa_keypair(CK_SESSION_HANDLE session,
 CK_RV find_keys_with_label_example(CK_SESSION_HANDLE session) {
     CK_BYTE_PTR label1 = "First Label";
     CK_OBJECT_HANDLE aes_key_handle1 = CK_INVALID_HANDLE;
-    CK_RV rv = generate_aes_key(session, 32, label1, strlen(label1), &aes_key_handle1);
+    CK_RV rv = generate_aes_key(session, 32, label1, (CK_ULONG) strlen(label1), &aes_key_handle1);
     if (CKR_OK != rv) {
         fprintf(stderr, "Failed to generate an AES key: %lu\n", rv);
         return rv;
@@ -161,7 +161,7 @@ CK_RV find_keys_with_label_example(CK_SESSION_HANDLE session) {
 
     CK_BYTE_PTR label2 = "Second Label";
     CK_OBJECT_HANDLE aes_key_handle2 = CK_INVALID_HANDLE;
-    rv = generate_aes_key(session, 32, label2, strlen(label2), &aes_key_handle2);
+    rv = generate_aes_key(session, 32, label2, (CK_ULONG) strlen(label2), &aes_key_handle2);
     if (CKR_OK != rv) {
         fprintf(stderr, "Failed to generate an AES key: %lu\n", rv);
         return rv;
@@ -170,7 +170,7 @@ CK_RV find_keys_with_label_example(CK_SESSION_HANDLE session) {
     CK_ULONG count = 0;
     CK_OBJECT_HANDLE *found_objects = NULL;
     CK_ATTRIBUTE attr[] = {
-            {CKA_LABEL, label1, strlen(label1)},
+            {CKA_LABEL, label1, (CK_ULONG) strlen(label1)},
     };
 
     rv = find_by_attr(session, attr, 1, &count, &found_objects);
@@ -185,7 +185,7 @@ CK_RV find_keys_with_label_example(CK_SESSION_HANDLE session) {
 
     attr->type = CKA_LABEL;
     attr->pValue = label2;
-    attr->ulValueLen = strlen(label2);
+    attr->ulValueLen = (CK_ULONG) strlen(label2);
 
     rv = find_by_attr(session, attr, 1, &count, &found_objects);
     if (CKR_OK != rv) {
@@ -262,7 +262,7 @@ CK_RV find_keys_by_search_template(CK_SESSION_HANDLE session) {
     }
 
     printf("Found %lu public key with modulus\n", count);
-    for (int i = 0; i < count; i++) {
+    for (CK_ULONG i = 0; i < count; i++) {
         printf("Found key handle %lu\n", found_objects[i]);
     }
 
@@ -277,30 +277,30 @@ int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
 
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     rv = pkcs11_initialize(args.library);
     if (CKR_OK != rv) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     rv = pkcs11_open_session(args.pin, &session);
     if (CKR_OK != rv) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     printf("Searching for keys by label\n");
     rv = find_keys_with_label_example(session);
     if (CKR_OK != rv) {
-        return rv;
+        return EXIT_FAILURE;
     }
 
     printf("\n\nSearching for keys by modulus\n");
     rv = find_keys_by_search_template(session);
     if (CKR_OK != rv) {
-        return rv;
+        return EXIT_FAILURE;
     }
 }

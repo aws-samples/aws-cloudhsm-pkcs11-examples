@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
     CK_SESSION_HANDLE session;
     int rc = 1;
 
-    struct import_args args = {};
+    struct import_args args = {0};
     if (get_import_args(argc, argv, &args) < 0) {
         return rc;
     }

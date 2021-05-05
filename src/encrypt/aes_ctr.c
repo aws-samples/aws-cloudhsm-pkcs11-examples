@@ -25,6 +25,8 @@
  */
 CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
     CK_RV rv;
+    unsigned char* hex_array = NULL;
+    CK_BYTE_PTR decrypted_ciphertext = NULL;
 
     // Generate a 256 bit AES key.
     CK_OBJECT_HANDLE aes_key = CK_INVALID_HANDLE;
@@ -35,7 +37,7 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
     }
 
     CK_BYTE_PTR plaintext = "plaintext payload to encrypt";
-    CK_ULONG plaintext_length = strlen(plaintext);
+    CK_ULONG plaintext_length = (CK_ULONG) strlen(plaintext);
     CK_ULONG ciphertext_length = 0;
 
     printf("Plaintext: %s\n", plaintext);
@@ -84,7 +86,6 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
     }
 
     // Print just the ciphertext in hex format.
-    unsigned char *hex_array = NULL;
     bytes_to_new_hexstring(ciphertext, ciphertext_length, &hex_array);
     if (!hex_array) {
         fprintf(stderr, "Coud not allocate memory for hex array\n");
@@ -113,7 +114,7 @@ CK_RV aes_ctr_sample(CK_SESSION_HANDLE session) {
     }
 
     // Allocate memory for decrypted ciphertext.
-    CK_BYTE_PTR decrypted_ciphertext = malloc(decrypted_ciphertext_length + 1); //We want to null terminate the raw chars later
+    decrypted_ciphertext = malloc(decrypted_ciphertext_length + 1); //We want to null terminate the raw chars later
     if (NULL == decrypted_ciphertext) {
         fprintf(stderr, "Coud not allocate memory for decrypted ciphertext\n");
         rv = CKR_HOST_MEMORY;
@@ -150,9 +151,8 @@ int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
 
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
-        fprintf(stderr, "failed to allocate memory\n");
         return EXIT_FAILURE;
     }
 

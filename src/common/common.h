@@ -38,6 +38,7 @@ struct pkcs_arguments {
     char *pin;
     char *library;
     CK_OBJECT_HANDLE wrapping_key_handle;
+    CK_OBJECT_HANDLE object_handle;
 };
 
 int get_pkcs_args(int argc, char **argv, struct pkcs_arguments *args);

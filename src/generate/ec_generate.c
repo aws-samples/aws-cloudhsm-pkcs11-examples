@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <dlfcn.h>
 
 #include <common.h>
 
@@ -61,14 +60,18 @@ CK_RV generate_ec_keypair(CK_SESSION_HANDLE session,
 int main(int argc, char **argv) {
     CK_RV rv;
     CK_SESSION_HANDLE session;
-    
-    struct pkcs_arguments args = {};
+    struct pkcs_arguments args = {0};
     if (get_pkcs_args(argc, argv, &args) < 0) {
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    rv = pkcs11_initialize(args.library);
-    rv = pkcs11_open_session(args.pin, &session);
+    if (CKR_OK != pkcs11_initialize(args.library)) {
+        return EXIT_FAILURE;
+    }
+
+    if (CKR_OK != pkcs11_open_session(args.pin, &session)) {
+        return EXIT_FAILURE;
+    }
 
     CK_OBJECT_HANDLE ec_public_key = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE ec_private_key = CK_INVALID_HANDLE;
@@ -89,7 +92,7 @@ int main(int argc, char **argv) {
                ec_private_key);
     } else {
         printf("prime256v1 key generation failed: %lu\n", rv);
-        return rv;
+        return EXIT_FAILURE;
     }
 
     rv = generate_ec_keypair(session, secp384r1, sizeof(secp384r1), &ec_public_key, &ec_private_key);
@@ -98,7 +101,7 @@ int main(int argc, char **argv) {
                ec_private_key);
     } else {
         printf("secp384r1 key generation failed: %lu\n", rv);
-        return rv;
+        return EXIT_FAILURE;
     }
 
     pkcs11_finalize_session(session);
