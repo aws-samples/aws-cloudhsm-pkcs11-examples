@@ -261,8 +261,7 @@ CK_RV attributes_output_all(
     uint8_t* attr_avail = calloc(attributes_types_len, sizeof(uint8_t));
     if (NULL == attr_avail) {
         fprintf(f, "ERROR: failed to allocate memory\n");
-        rv = CKR_HOST_MEMORY;
-        break;
+        return CKR_HOST_MEMORY;
     }
 
     size_t i = (size_t)0;
