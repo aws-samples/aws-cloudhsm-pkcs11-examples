@@ -94,11 +94,9 @@ CK_RV aes_no_padding_wrapping(CK_SESSION_HANDLE session) {
     }
 
     // The wrapping key is a token key, so we have to clean it up.
-    if (CK_INVALID_HANDLE != wrapping_key) {
-        rv = funcs->C_DestroyObject(session, wrapping_key);
-        if (CKR_OK != rv) {
-            fprintf(stderr, "Could not delete wrapping key: %lu\n", rv);
-        }
+    CK_RV cleanup_rv = funcs->C_DestroyObject(session, wrapping_key);
+    if (CKR_OK != cleanup_rv) {
+        fprintf(stderr, "Failed to delete wrapping key with rv: %lu\n", cleanup_rv);
     }
 
     return rv;

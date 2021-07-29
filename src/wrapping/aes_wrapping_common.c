@@ -6,7 +6,7 @@
 
 /**
  * Generate an AES key that can be used to wrap and unwrap other keys.
- * The wrapping key must be a token key. We have to manually clean it
+ * The wrapping key should be a token key. We have to manually clean it
  * up at the end of this sample.
  * @param session
  * @param key_length_bytes

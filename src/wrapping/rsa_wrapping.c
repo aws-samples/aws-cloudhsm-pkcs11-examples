@@ -66,14 +66,14 @@ CK_RV generate_wrapping_keypair(CK_SESSION_HANDLE session,
 
     CK_ATTRIBUTE public_key_template[] = {
             {CKA_TOKEN,           &true_val,           sizeof(CK_BBOOL)},
-            {CKA_WRAP,              &true_val, sizeof(CK_BBOOL)},
+            {CKA_WRAP,            &true_val, sizeof(CK_BBOOL)},
             {CKA_MODULUS_BITS,    &key_length_bits, sizeof(CK_ULONG)},
             {CKA_PUBLIC_EXPONENT, &public_exponent, sizeof(public_exponent)},
     };
 
     CK_ATTRIBUTE private_key_template[] = {
             {CKA_TOKEN,       &true_val, sizeof(CK_BBOOL)},
-            {CKA_UNWRAP,              &true_val, sizeof(CK_BBOOL)},
+            {CKA_UNWRAP,      &true_val, sizeof(CK_BBOOL)},
     };
 
     rv = funcs->C_GenerateKeyPair(session,
@@ -360,19 +360,15 @@ CK_RV rsa_oaep_wrap(CK_SESSION_HANDLE session) {
         free(hex_array);
     }
 
-    // The wrapping key is a token key, so we have to clean it up.
-    if (CK_INVALID_HANDLE != rsa_public_key) {
-        rv = funcs->C_DestroyObject(session, rsa_public_key);
-        if (CKR_OK != rv) {
-            fprintf(stderr, "Could not delete rsa_public_key key: %lu\n", rv);
-        }
+    // The wrapping keys are token keys, so we have to clean it up.
+    CK_RV public_cleanup_rv = funcs->C_DestroyObject(session, rsa_public_key);
+    if (CKR_OK != public_cleanup_rv) {
+        fprintf(stderr, "Failed to delete public key with rv: %lu\n", public_cleanup_rv);
     }
 
-    if (CK_INVALID_HANDLE != rsa_private_key) {
-        rv = funcs->C_DestroyObject(session, rsa_private_key);
-        if (CKR_OK != rv) {
-            fprintf(stderr, "Could not delete rsa_private_key key: %lu\n", rv);
-        }
+    CK_RV private_cleanup_rv = funcs->C_DestroyObject(session, rsa_private_key);
+    if (CKR_OK != private_cleanup_rv) {
+        fprintf(stderr, "Failed to delete private key with rv: %lu\n", private_cleanup_rv);
     }
 
     return rv;
@@ -450,19 +446,15 @@ CK_RV rsa_aes_wrap(CK_SESSION_HANDLE session) {
         free(hex_array);
     }
 
-    // The wrapping key is a token key, so we have to clean it up.
-    if (CK_INVALID_HANDLE != rsa_public_key) {
-        rv = funcs->C_DestroyObject(session, rsa_public_key);
-        if (CKR_OK != rv) {
-            fprintf(stderr, "Could not delete rsa_public_key key: %lu\n", rv);
-        }
+    // The wrapping keys are token keys, so we have to clean it up.
+    CK_RV public_cleanup_rv = funcs->C_DestroyObject(session, rsa_public_key);
+    if (CKR_OK != public_cleanup_rv) {
+        fprintf(stderr, "Failed to delete public key with rv: %lu\n", public_cleanup_rv);
     }
 
-    if (CK_INVALID_HANDLE != rsa_private_key) {
-        rv = funcs->C_DestroyObject(session, rsa_private_key);
-        if (CKR_OK != rv) {
-            fprintf(stderr, "Could not delete rsa_private_key key: %lu\n", rv);
-        }
+    CK_RV private_cleanup_rv = funcs->C_DestroyObject(session, rsa_private_key);
+    if (CKR_OK != private_cleanup_rv) {
+        fprintf(stderr, "Failed to delete private key with rv: %lu\n", private_cleanup_rv);
     }
 
     return rv;
