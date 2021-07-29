@@ -83,7 +83,7 @@ CK_RV aes_wrap_key(
         CK_BYTE_PTR wrapped_bytes,
         CK_ULONG_PTR wrapped_bytes_len) {
 
-    CK_MECHANISM mech = {CKM_AES_KEY_WRAP, NULL, 0};
+    CK_MECHANISM mech = {CKM_CLOUDHSM_AES_KEY_WRAP_PKCS5_PAD, NULL, 0};
 
     return funcs->C_WrapKey(
             session,
@@ -112,7 +112,7 @@ CK_RV aes_unwrap_key(
         CK_OBJECT_HANDLE_PTR unwrapped_key_handle,
         enum TEMPLATE_TYPE template_type) {
 
-    CK_MECHANISM mech = {CKM_AES_KEY_WRAP, NULL, 0};
+    CK_MECHANISM mech = {CKM_CLOUDHSM_AES_KEY_WRAP_PKCS5_PAD, NULL, 0};
     CK_OBJECT_CLASS key_class = CKO_PRIVATE_KEY;
     CK_ATTRIBUTE *template = NULL;
     CK_ULONG template_count = 0;
@@ -311,18 +311,15 @@ done:
         free(wrapped_key);
     }
 
-    if (CK_INVALID_HANDLE != rsa_public_key) {
-        rv = funcs->C_DestroyObject(session, rsa_public_key);
-        if (CKR_OK != rv) {
-            fprintf(stderr, "Could not delete public key: %lu\n", rv);
-        }
+    // The wrapping keys are token keys, so we have to clean it up.
+    CK_RV public_cleanup_rv = funcs->C_DestroyObject(session, rsa_public_key);
+    if (CKR_OK != public_cleanup_rv) {
+        fprintf(stderr, "Failed to delete public key with rv: %lu\n", public_cleanup_rv);
     }
 
-    if (CK_INVALID_HANDLE != rsa_private_key) {
-        rv = funcs->C_DestroyObject(session, rsa_private_key);
-        if (CKR_OK != rv) {
-            fprintf(stderr, "Could not delete private key: %lu\n", rv);
-        }
+    CK_RV private_cleanup_rv = funcs->C_DestroyObject(session, rsa_private_key);
+    if (CKR_OK != private_cleanup_rv) {
+        fprintf(stderr, "Failed to delete private key with rv: %lu\n", private_cleanup_rv);
     }
 
     return rv;

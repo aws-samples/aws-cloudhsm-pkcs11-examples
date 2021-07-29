@@ -42,7 +42,7 @@ CK_RV aes_zero_padding_wrapping(CK_SESSION_HANDLE session) {
     }
 
     // AES Key Wrap with Zero Padding.
-    CK_MECHANISM mech = { CKM_AES_KEY_WRAP_PAD, NULL, 0 };
+    CK_MECHANISM mech = { CKM_CLOUDHSM_AES_KEY_WRAP_ZERO_PAD, NULL, 0 };
 
     // Determine how much space needs to be allocated for the wrapped key.
     CK_ULONG wrapped_len = 0;
@@ -92,11 +92,9 @@ CK_RV aes_zero_padding_wrapping(CK_SESSION_HANDLE session) {
     }
 
     // The wrapping key is a token key, so we have to clean it up.
-    if (CK_INVALID_HANDLE != wrapping_key) {
-        rv = funcs->C_DestroyObject(session, wrapping_key);
-        if (CKR_OK != rv) {
-            fprintf(stderr, "Could not delete wrapping key: %lu\n", rv);
-        }
+    CK_RV cleanup_rv = funcs->C_DestroyObject(session, wrapping_key);
+    if (CKR_OK != cleanup_rv) {
+        fprintf(stderr, "Failed to delete wrapping key with rv: %lu\n", cleanup_rv);
     }
 
     return rv;

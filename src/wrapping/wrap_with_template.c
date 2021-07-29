@@ -128,7 +128,7 @@ CK_RV aes_wrap_key(
         CK_BYTE_PTR wrapped_bytes,
         CK_ULONG_PTR wrapped_bytes_len) {
 
-    CK_MECHANISM mech = {CKM_AES_KEY_WRAP, NULL, 0};
+    CK_MECHANISM mech = {CKM_CLOUDHSM_AES_KEY_WRAP_PKCS5_PAD, NULL, 0};
 
     return funcs->C_WrapKey(
             session,
@@ -215,7 +215,7 @@ CK_RV aes_wrap_with_wrap_template(CK_SESSION_HANDLE session) {
     }
 
     rv = wrap_key_with_template(session, wrapping_key, false_val);
-    if (rv != CKR_ARGUMENTS_BAD) {
+    if (CKR_OK == rv) {
         fprintf(stderr, "Target key with non matching template failed with rv:%lu.\n", rv);
         goto done;
     }
@@ -229,12 +229,12 @@ CK_RV aes_wrap_with_wrap_template(CK_SESSION_HANDLE session) {
     printf("Successfully succeeded to wrap key with matching attributes.\n");
 
 done:
+    ; // Empty statement to make a declaration after a label
+
     // The wrapping key is a token key, so we have to clean it up.
-    if (CK_INVALID_HANDLE != wrapping_key) {
-        rv = funcs->C_DestroyObject(session, wrapping_key);
-        if (CKR_OK != rv) {
-            fprintf(stderr, "Could not delete wrapping key: %lu\n", rv);
-        }
+    CK_RV cleanup_rv = funcs->C_DestroyObject(session, wrapping_key);
+    if (CKR_OK != cleanup_rv) {
+        fprintf(stderr, "Failed to delete wrapping key with rv: %lu\n", cleanup_rv);
     }
 
     return rv;
