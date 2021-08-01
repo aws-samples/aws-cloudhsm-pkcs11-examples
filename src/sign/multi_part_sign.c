@@ -39,4 +39,8 @@ int main(int argc, char **argv) {
     rv = multi_part_ec_sign_verify(session);
     if (CKR_OK != rv)
         return rv;
+
+    pkcs11_finalize_session(session);
+
+    return EXIT_SUCCESS;
 }

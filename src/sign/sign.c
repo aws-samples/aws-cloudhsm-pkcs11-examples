@@ -42,4 +42,8 @@ int main(int argc, char **argv) {
     rv = ec_sign_verify(session);
     if (CKR_OK != rv)
         return EXIT_FAILURE;
+
+    pkcs11_finalize_session(session);
+
+    return EXIT_SUCCESS;
 }
