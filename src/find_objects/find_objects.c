@@ -303,4 +303,8 @@ int main(int argc, char **argv) {
     if (CKR_OK != rv) {
         return EXIT_FAILURE;
     }
+
+    pkcs11_finalize_session(session);
+
+    return EXIT_SUCCESS;
 }
