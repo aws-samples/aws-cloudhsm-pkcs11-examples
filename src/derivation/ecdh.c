@@ -155,6 +155,7 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
     // Setup the mechanism with the IV location and AAD information.
     params.pIv = iv;
     params.ulIvLen = AES_GCM_IV_SIZE;
+    params.ulIvBits = 0;
     params.pAAD = aad;
     params.ulAADLen = aad_length;
     params.ulTagBits = AES_GCM_TAG_SIZE * 8;
