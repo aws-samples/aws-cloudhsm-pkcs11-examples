@@ -125,8 +125,8 @@ CK_RV hmac_kdf_sample(CK_SESSION_HANDLE session) {
     CK_PRF_DATA_PARAM kdf_data_params[] = {
         {SP800_108_COUNTER_FORMAT,    &counter_format,     sizeof(CK_SP800_108_COUNTER_FORMAT)},
         {SP800_108_DKM_FORMAT,        &dkm_format,         sizeof(CK_SP800_108_DKM_LENGTH_FORMAT)},
-        {SP800_108_PRF_LABEL,         &label,              sizeof(label)},
-        {SP800_108_PRF_CONTEXT,       &context,            sizeof(context)}
+        {SP800_108_PRF_LABEL,         label,               sizeof(label)},
+        {SP800_108_PRF_CONTEXT,       context,             sizeof(context)}
     };
 
     CK_SP800_108_KDF_PARAMS kdf_params;    
