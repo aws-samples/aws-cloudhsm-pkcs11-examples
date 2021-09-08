@@ -117,7 +117,7 @@ CK_RV multi_part_rsa_sign_verify(CK_SESSION_HANDLE session) {
     }
 
     CK_BYTE_PTR data = "Here is some data to sign";
-    CK_ULONG data_length = strlen(data);
+    CK_ULONG data_length = (CK_ULONG) strlen(data);
 
     CK_BYTE signature[MAX_SIGNATURE_LENGTH];
     CK_ULONG signature_length = MAX_SIGNATURE_LENGTH;
