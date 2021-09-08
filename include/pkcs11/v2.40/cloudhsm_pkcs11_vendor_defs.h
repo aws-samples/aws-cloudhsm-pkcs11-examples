@@ -30,6 +30,10 @@
 
 #include "pkcs11.h"
 
+#ifdef _WIN32
+#pragma pack(push, cloudhsm_pkcs11_vendor_defines, 1)
+#endif
+
 #define CKM_DES3_NIST_WRAP             (CKM_VENDOR_DEFINED | 0x00008000UL)
 #define CKM_CLOUDHSM_AES_GCM           (CKM_VENDOR_DEFINED | CKM_AES_GCM)
 
@@ -95,5 +99,9 @@ typedef struct CK_SP800_108_KDF_PARAMS {
  * {SP800_108_PRF_LABEL, (pointer to buff containing prf label), buffer length}
  * and so on.
  */
+
+#ifdef _WIN32
+#pragma pack(pop, cloudhsm_pkcs11_vendor_defines)
+#endif
 
 #endif /* _CLOUDHSM_PKCS11_VENDOR_DEFS_H_ */
