@@ -89,15 +89,16 @@ CK_RV aes_cbc_multipart_sample(CK_SESSION_HANDLE session) {
         rv = funcs->C_EncryptUpdate(session, chunk, CHUNK_SIZE, NULL, &encrypted_chunk_size);
         if (CKR_OK != rv) {
             printf("Encryption failed: %lu\n", rv);
-            return rv;
+            goto done;
         }
 
         // Increase the ciphertext buffer to hold the new chunk.
-        ciphertext = realloc(ciphertext, ciphertext_size + encrypted_chunk_size);
-        if (NULL == ciphertext) {
+        CK_BYTE_PTR new_ciphertext = realloc(ciphertext, ciphertext_size + encrypted_chunk_size);
+        if (NULL == new_ciphertext) {
             printf("Could not allocate memory for ciphertext\n");
-            return rv;
+            goto done;
         }
+        ciphertext = new_ciphertext;
 
         // Encrypt the data.
         rv = funcs->C_EncryptUpdate(session, chunk, CHUNK_SIZE, &ciphertext[ciphertext_size], &encrypted_chunk_size);
@@ -116,11 +117,12 @@ CK_RV aes_cbc_multipart_sample(CK_SESSION_HANDLE session) {
         goto done;
     }
 
-    ciphertext = realloc(ciphertext, ciphertext_size + encrypted_chunk_size);
-    if (NULL == ciphertext) {
+    CK_BYTE_PTR new_ciphertext = realloc(ciphertext, ciphertext_size + encrypted_chunk_size);
+    if (NULL == new_ciphertext) {
         printf("Could not allocate memory for ciphertext\n");
-        return rv;
+        goto done;
     }
+    ciphertext = new_ciphertext;
 
     // Finalize the encryption, including any final padding
     rv = funcs->C_EncryptFinal(session, &ciphertext[ciphertext_size], &encrypted_chunk_size);
@@ -147,7 +149,7 @@ CK_RV aes_cbc_multipart_sample(CK_SESSION_HANDLE session) {
     rv = funcs->C_DecryptInit(session, &mech, aes_key);
     if (CKR_OK != rv) {
         printf("Decryption Init failed: %lu\n", rv);
-        return rv;
+        goto done;
     }
 
     // Determine how much memory is required to hold the decrypted text.
