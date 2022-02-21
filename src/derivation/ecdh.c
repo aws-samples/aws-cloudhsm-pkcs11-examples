@@ -92,7 +92,7 @@ CK_RV generate_ecdh_derive_key(CK_SESSION_HANDLE session,
     CK_KEY_TYPE keyType = CKK_AES;
     CK_OBJECT_CLASS keyClass = CKO_SECRET_KEY;
     CK_ULONG aesKeyLen = 32;
-    CK_ECDH1_DERIVE_PARAMS params = { CKD_SHA1_KDF, 0, NULL, ec_point_size - 2, &ec_point_value[2] };
+    CK_ECDH1_DERIVE_PARAMS params = { CKD_SHA256_KDF, 0, NULL, ec_point_size - 2, &ec_point_value[2] };
     CK_MECHANISM derive_mechanism = { CKM_ECDH1_DERIVE, &params, sizeof(params) };
 
     CK_ATTRIBUTE derivekey_template[] = {
