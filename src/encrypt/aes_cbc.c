@@ -66,8 +66,8 @@ CK_RV aes_cbc_multipart_sample(CK_SESSION_HANDLE session) {
     }
 
     // We will stream several chunks of non block aligned random data to encrypt
-    size_t max_chunks = 4;
-    size_t chunk_idx = 0;
+    CK_ULONG max_chunks = 4;
+    CK_ULONG chunk_idx = 0;
 
     // The encrypted chunks will be stored in the ciphertext buffer
     CK_BYTE_PTR ciphertext = NULL;
@@ -76,11 +76,11 @@ CK_RV aes_cbc_multipart_sample(CK_SESSION_HANDLE session) {
 
     // We store the randomly generated plaintext as well, for visual comparison
     // 512 will hold enough for this sample.
-    CK_BYTE plaintext[512] = { };
+    CK_BYTE plaintext[512] = { 0 };
     CK_ULONG plaintext_size = CHUNK_SIZE * max_chunks;
 
     while(chunk_idx < max_chunks) {
-        CK_BYTE chunk[CHUNK_SIZE] = { };
+        CK_BYTE chunk[CHUNK_SIZE] = { 0 };
         get_random_data(chunk, CHUNK_SIZE);
         memcpy(&plaintext[chunk_idx * CHUNK_SIZE], chunk, CHUNK_SIZE);
         chunk_idx += 1;
