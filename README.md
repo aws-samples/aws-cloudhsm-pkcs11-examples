@@ -27,8 +27,9 @@ sudo yum install -y cmake gcc gcc-c++ openssl-devel
 The examples are tested on Windows Server 2019 AMI. You will need to have the
 following installed:
 
-* (Microsoft C++ Build Tools)[https://visualstudio.microsoft.com/visual-cpp-build-tools/]
-* CMake 3.20
+* Visual Studio C++ CMake Tools for Windows - Available via the Visual Studio installer.
+* Visual Studio Build Tools 2019 - Available via the Visual Studio installer.
+* [CMake 3.x](https://cmake.org/download/)
 
 
 ### Building
