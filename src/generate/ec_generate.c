@@ -36,16 +36,17 @@ CK_RV generate_ec_keypair(CK_SESSION_HANDLE session,
                           CK_OBJECT_HANDLE_PTR private_key) {
     CK_RV rv;
     CK_MECHANISM mech = {CKM_EC_KEY_PAIR_GEN, NULL, 0};
-
+    // CK_BYTE id[] = {018f389d200e48536367f05b99122f355ba33572009bd2b8b521cdbbb717a5b5};
     CK_ATTRIBUTE public_key_template[] = {
             {CKA_VERIFY,    &true_val,       sizeof(CK_BBOOL)},
-            {CKA_TOKEN,     &false_val,      sizeof(CK_BBOOL)},
-            {CKA_EC_PARAMS, named_curve_oid, named_curve_oid_len}
+            {CKA_TOKEN,     &true_val,       sizeof(CK_BBOOL)},
+            {CKA_EC_PARAMS, named_curve_oid, named_curve_oid_len},
     };
 
     CK_ATTRIBUTE private_key_template[] = {
             {CKA_SIGN,  &true_val,  sizeof(CK_BBOOL)},
-            {CKA_TOKEN, &false_val, sizeof(CK_BBOOL)},
+            {CKA_TOKEN, &true_val,  sizeof(CK_BBOOL)},
+            // {CKA_ID,    id,     sizeof(id)}
     };
 
     rv = funcs->C_GenerateKeyPair(session,
@@ -75,7 +76,7 @@ int main(int argc, char **argv) {
 
     CK_OBJECT_HANDLE ec_public_key = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE ec_private_key = CK_INVALID_HANDLE;
-
+    
     /**
      * Curve OIDs generated using OpenSSL on the command line.
      * Visit https://docs.aws.amazon.com/cloudhsm/latest/userguide/pkcs11-key-types.html for a list
@@ -84,7 +85,7 @@ int main(int argc, char **argv) {
      * openssl ecparam -name secp384r1 -outform DER | hexdump -C
      */
     CK_BYTE prime256v1[] = {0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
-    CK_BYTE secp384r1[] = {0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22};
+    // CK_BYTE secp384r1[] = {0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22};
 
     rv = generate_ec_keypair(session, prime256v1, sizeof(prime256v1), &ec_public_key, &ec_private_key);
     if (CKR_OK == rv) {
@@ -95,14 +96,14 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    rv = generate_ec_keypair(session, secp384r1, sizeof(secp384r1), &ec_public_key, &ec_private_key);
-    if (CKR_OK == rv) {
-        printf("secp384r1 key generated. Public key handle: %lu, Private key handle: %lu\n", ec_public_key,
-               ec_private_key);
-    } else {
-        printf("secp384r1 key generation failed: %lu\n", rv);
-        return EXIT_FAILURE;
-    }
+    // rv = generate_ec_keypair(session, secp384r1, sizeof(secp384r1), &ec_public_key, &ec_private_key);
+    // if (CKR_OK == rv) {
+    //     printf("secp384r1 key generated. Public key handle: %lu, Private key handle: %lu\n", ec_public_key,
+    //            ec_private_key);
+    // } else {
+    //     printf("secp384r1 key generation failed: %lu\n", rv);
+    //     return EXIT_FAILURE;
+    // }
 
     pkcs11_finalize_session(session);
     return 0;
