@@ -36,7 +36,7 @@ CK_RV generate_ec_keypair(CK_SESSION_HANDLE session,
                           CK_OBJECT_HANDLE_PTR private_key) {
     CK_RV rv;
     CK_MECHANISM mech = {CKM_EC_KEY_PAIR_GEN, NULL, 0};
-    // CK_BYTE id[] = {018f389d200e48536367f05b99122f355ba33572009bd2b8b521cdbbb717a5b5};
+    CK_BYTE id[] = {018f389d200e48536367f05b99122f355ba33572009bd2b8b521cdbbb717a5b5};
     CK_ATTRIBUTE public_key_template[] = {
             {CKA_VERIFY,    &true_val,       sizeof(CK_BBOOL)},
             {CKA_TOKEN,     &true_val,       sizeof(CK_BBOOL)},
@@ -46,7 +46,7 @@ CK_RV generate_ec_keypair(CK_SESSION_HANDLE session,
     CK_ATTRIBUTE private_key_template[] = {
             {CKA_SIGN,  &true_val,  sizeof(CK_BBOOL)},
             {CKA_TOKEN, &true_val,  sizeof(CK_BBOOL)},
-            // {CKA_ID,    id,     sizeof(id)}
+            {CKA_ID,    id,     sizeof(id)}
     };
 
     rv = funcs->C_GenerateKeyPair(session,
