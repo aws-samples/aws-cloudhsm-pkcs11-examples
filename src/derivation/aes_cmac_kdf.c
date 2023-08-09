@@ -77,7 +77,7 @@ CK_RV aes_cmac_kdf_sample(CK_SESSION_HANDLE session) {
         {CKA_CLASS,           &derived_key_class,        sizeof(CK_OBJECT_CLASS)},
         {CKA_KEY_TYPE,        &derived_key_type,         sizeof(CK_KEY_TYPE)},
         {CKA_VALUE_LEN,       &derived_key_len,          sizeof(CKA_VALUE_LEN)},
-        {CKA_LABEL,           derived_key_label,		 sizeof(derived_key_label)},
+        {CKA_LABEL,           derived_key_label,		 strlen(derived_key_label)},
         {CKA_TOKEN,           &false_val,                sizeof(CK_BBOOL)}
     };
 
