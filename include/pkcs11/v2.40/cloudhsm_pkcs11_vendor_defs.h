@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017, Cavium, Inc. All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 1. Redistributions of source code must retain the above copyright
@@ -11,7 +11,7 @@
  * 3. Neither the name of the Cavium, Inc. nor the
  *    names of its contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY CAVIUM INC. ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -25,25 +25,24 @@
  *
  */
 
-#ifndef _CLOUDHSM_PKCS11_VENDOR_DEFS_H_
-#define _CLOUDHSM_PKCS11_VENDOR_DEFS_H_
-
 #include "pkcs11.h"
 
 #ifdef _WIN32
 #pragma pack(push, cloudhsm_pkcs11_vendor_defines, 1)
 #endif
 
-#define CKM_DES3_NIST_WRAP             (CKM_VENDOR_DEFINED | 0x00008000UL)
+#ifndef CKM_CLOUDHSM_AES_GCM
 #define CKM_CLOUDHSM_AES_GCM           (CKM_VENDOR_DEFINED | CKM_AES_GCM)
+#endif
 
-// More information can be found at https://docs.aws.amazon.com/cloudhsm/latest/userguide/manage-aes-key-wrapping.html
-#define CKM_CLOUDHSM_AES_KEY_WRAP_NO_PAD        (CKM_VENDOR_DEFINED | CKM_AES_KEY_WRAP)
-#define CKM_CLOUDHSM_AES_KEY_WRAP_PKCS5_PAD     (CKM_VENDOR_DEFINED | CKM_AES_KEY_WRAP_PAD)
-#define CKM_CLOUDHSM_AES_KEY_WRAP_ZERO_PAD     (CKM_VENDOR_DEFINED | 0x0000216FUL)
+#ifndef CKM_SP800_108_COUNTER_KDF
 
-/* HMAC KDF Mechanism */
+/*
+HMAC/CMAC KDF Mechanism. The mechanism CKM_SP800_108_COUNTER_KDF is deprecated.
+The recommended mechanism for KDF is CKM_CLOUDHSM_SP800_108_COUNTER_KDF.
+*/
 #define CKM_SP800_108_COUNTER_KDF      (CKM_VENDOR_DEFINED | 0x00000001UL)
+#define CKM_CLOUDHSM_SP800_108_COUNTER_KDF (CKM_VENDOR_DEFINED | 0x00000001UL)
 
 typedef struct CK_SP800_108_COUNTER_FORMAT {
     CK_ULONG   ulWidthInBits;
@@ -63,11 +62,14 @@ typedef CK_SP800_108_DKM_LENGTH_FORMAT CK_PTR CK_SP800_108_DKM_LENGTH_FORMAT_PTR
 
 typedef CK_ULONG CK_PRF_DATA_TYPE;
 /* PRF data types */
-#define SP800_108_COUNTER_FORMAT       0x0004
-#define SP800_108_PRF_LABEL            0x0005
-#define SP800_108_PRF_CONTEXT          0x0006
-#define SP800_108_DKM_FORMAT           0x0007
-#define SP800_108_BYTE_ARRAY           0x0008
+#define CK_SP800_108_ITERATION_VARIABLE 0x0001
+#define CK_SP800_108_DKM_LENGTH         0x0002
+#define CK_SP800_108_BYTE_ARRAY         0x0003
+#define SP800_108_COUNTER_FORMAT        0x0004
+#define SP800_108_PRF_LABEL             0x0005
+#define SP800_108_PRF_CONTEXT           0x0006
+#define SP800_108_DKM_FORMAT            0x0007
+#define SP800_108_BYTE_ARRAY            0x0008
 
 typedef CK_MECHANISM_TYPE CK_PRF_TYPE;
 
@@ -90,7 +92,7 @@ typedef struct CK_SP800_108_KDF_PARAMS {
  * HMAC KDF mechanism (CKM_SP800_108_COUNTER_KDF).
  * prftype can be one of CKM_SHA_1_HMAC / SHA224_HMAC / SHA256_HMAC /
  * SHA384_HMAC / SHA512_HMAC.
- * Corrsponding to the mechanism, data has to be sent. This data will be stored
+ * Corresponding to the mechanism, data has to be sent. This data will be stored
  * in a buffer pointed to by pDataParams. Each data param will be of tlv form
  * For eg. if we are using counter kdf mechanism (CKM_SP800_108_COUNTER_KDF),
  * we have to send counter format, prf label, prf context and dkm format in
@@ -100,8 +102,20 @@ typedef struct CK_SP800_108_KDF_PARAMS {
  * and so on.
  */
 
+#endif // CKM_SP800_108_COUNTER_KDF
+
+#ifndef CKM_CLOUDHSM_AES_KEY_WRAP_NO_PAD
+#define CKM_CLOUDHSM_AES_KEY_WRAP_NO_PAD        (CKM_VENDOR_DEFINED | CKM_AES_KEY_WRAP)
+#endif
+
+#ifndef CKM_CLOUDHSM_AES_KEY_WRAP_PKCS5_PAD
+#define CKM_CLOUDHSM_AES_KEY_WRAP_PKCS5_PAD     (CKM_VENDOR_DEFINED | CKM_AES_KEY_WRAP_PAD)
+#endif
+
+#ifndef CKM_CLOUDHSM_AES_KEY_WRAP_ZERO_PAD
+#define CKM_CLOUDHSM_AES_KEY_WRAP_ZERO_PAD     (CKM_VENDOR_DEFINED | 0x0000216FUL)
+#endif
+
 #ifdef _WIN32
 #pragma pack(pop, cloudhsm_pkcs11_vendor_defines)
 #endif
-
-#endif /* _CLOUDHSM_PKCS11_VENDOR_DEFS_H_ */
