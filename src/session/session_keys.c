@@ -18,7 +18,6 @@
  */
 
 #include "common.h"
-#include <cloudhsm_pkcs11_vendor_defs.h>
 #include <cryptoki.h>
 #include <stdio.h>
 #include <stdlib.h>
