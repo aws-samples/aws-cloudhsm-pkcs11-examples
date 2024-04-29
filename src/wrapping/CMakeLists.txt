@@ -25,4 +25,4 @@ add_test(aes_zero_padding_wrapping aes_zero_padding_wrapping --pin ${HSM_USER}:$
 add_test(aes_wrapping aes_wrapping --pin ${HSM_USER}:${HSM_PASSWORD})
 add_test(rsa_wrapping rsa_wrapping --pin ${HSM_USER}:${HSM_PASSWORD}) 
 add_test(wrap_with_template wrap_with_template --pin ${HSM_USER}:${HSM_PASSWORD})
-add_test(unwrap_with_template unwrap_with_template --pin ${HSM_USER}:${HSM_PASSWORD} --wp_key ${TRUSTED_WRAPPING_KEY_HANDLE})
+add_test(unwrap_with_template unwrap_with_template --pin ${HSM_USER}:${HSM_PASSWORD} --wp_key ${TRUSTED_WRAPPING_KEY_LABEL})

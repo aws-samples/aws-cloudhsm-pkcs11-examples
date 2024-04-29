@@ -75,10 +75,7 @@ int get_pkcs_args(int argc, char** argv, struct pkcs_arguments* args) {
         args->library = DEFAULT_PKCS11_LIBRARY_PATH;
     }
 
-    args->wrapping_key_handle = CK_INVALID_HANDLE;
-    if (options[2].argument) {
-        args->wrapping_key_handle = strtoul(options[2].argument, NULL, 0);
-    }
+    args->wrapping_key_label = options[2].argument;
 
     args->object_handle = CK_INVALID_HANDLE;
     if (options[3].argument) {
