@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <common.h>
 
@@ -64,6 +65,68 @@ CK_RV generate_rsa_keypair(CK_SESSION_HANDLE session,
                                   public_key,
                                   private_key);
     return rv;
+}
+
+/**
+ * Find a matching key using a label.
+ * @param hSession
+ * @param label
+ * @param hObject
+ * @return
+ */
+CK_RV find_wrapping_key_with_label(CK_SESSION_HANDLE hSession,
+                   char *label,
+                   CK_OBJECT_HANDLE_PTR hObject) {
+    CK_RV rv;
+
+    if (NULL == hObject){
+        return CKR_ARGUMENTS_BAD;
+    }
+
+    CK_ATTRIBUTE template[] = {
+        {CKA_LABEL, label, (CK_ULONG) strlen(label)},
+    };
+
+    rv = funcs->C_FindObjectsInit(hSession, template, 1);
+    if (CKR_OK != rv) {
+        fprintf(stderr, "Can't initialize search\n");
+        return rv;
+    }
+
+    CK_ULONG found = 0;
+
+    rv = funcs->C_FindObjects(hSession, NULL, 2, &found);
+    if (CKR_OK != rv) {
+        funcs->C_FindObjectsFinal(hSession);
+        return rv;
+    }
+
+    if (found > 1) {
+        fprintf(stderr, "Found multiple keys with the same label. Please provide a unique label");
+        rv = CKR_GENERAL_ERROR;
+        return rv;
+    }
+
+    found = 0;
+
+    rv = funcs->C_FindObjects(hSession, hObject, 1, &found);
+    if (CKR_OK != rv) {
+        fprintf(stderr, "Can't run search\n");
+        funcs->C_FindObjectsFinal(hSession);
+        return rv;
+    }
+    rv = funcs->C_FindObjectsFinal(hSession);
+    if (CKR_OK != rv) {
+        fprintf(stderr, "Can't finalize search\n");
+        return rv;
+    }
+
+    if (0 == found) {
+        fprintf(stderr, "Didn't find requested key\n");
+        return rv;
+    }
+
+    return CKR_OK;
 }
 
 /**
@@ -244,29 +307,40 @@ CK_RV aes_template_unwrap(
 /**
  * Wrap an RSA key with a trusted wrapping key and then unwrap it.
  * @param session
- * @param wrapping_key
+ * @param wrapping_key_label
  * @return
  */
 CK_RV aes_wrap_unwrap_with_trusted(CK_SESSION_HANDLE session,
-        CK_OBJECT_HANDLE wrapping_key) {
+        CK_BYTE_PTR wrapping_key_label) {
 
     CK_RV rv;
     CK_BYTE_PTR wrapped_key = NULL;
     CK_OBJECT_HANDLE rsa_public_key = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE rsa_private_key = CK_INVALID_HANDLE;
 
-    // validate the wrapping key is marked as trusted
+    CK_OBJECT_HANDLE wrapping_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE_PTR wrapping_key_ptr = &wrapping_key;
+
+    rv = find_wrapping_key_with_label(session, wrapping_key_label, wrapping_key_ptr);
+    if (CKR_OK != rv) {
+        fprintf(stderr, "Could not find a key with the label: %s\n", wrapping_key_label);
+        return rv;
+    }
+
+    // Validate the wrapping key is marked as trusted
     CK_BBOOL cka_trusted_val = false_val;
     rv = get_attribute(session, wrapping_key, CKA_TRUSTED, &cka_trusted_val);
     if (rv != CKR_OK) {
         fprintf(stderr, "Failed to get CKA_TRUSTED attribute on the wrapping key: %lu\n", rv);
         goto done;
     }
+
     if (cka_trusted_val != true_val) {
         fprintf(stderr, "Invalid wrapping key specified. Please specify wrapping key with CKA_TRUSTED set to true\n");
-        fprintf(stderr, "The CKA_TRUSTED attribute for the wrapping key can be set by using the cloudhsm_mgmt_util:\n\n");
-        fprintf(stderr, "aws-cloudhsm> loginHSM CO <co-username> <co-password>\n");
-        fprintf(stderr, "aws-cloudhsm> setAttribute %lu 134 1\n\n", wrapping_key);
+        fprintf(stderr, "The CKA_TRUSTED attribute for the wrapping key can be set by using the CloudHSM CLI:\n\n");
+        fprintf(stderr, "aws-cloudhsm> login --role admin --username <admin-username> --password <admin-password>\n");
+        fprintf(stderr, "aws-cloudhsm> key list --filter attr.label=%s\n", wrapping_key_label);  // use key list to retrieve the key-reference
+        fprintf(stderr, "aws-cloudhsm> key set-attribute --name trusted --value true --filter key-reference=<wrapping-key-reference>");
         rv = CKR_GENERAL_ERROR;
         goto done;
     }
@@ -345,7 +419,7 @@ int main(int argc, char **argv) {
         return rc;
     }
 
-    rv = aes_wrap_unwrap_with_trusted(session, args.wrapping_key_handle);
+    rv = aes_wrap_unwrap_with_trusted(session, args.wrapping_key_label);
     if (CKR_OK != rv) {
         fprintf(stderr, "Failed to unwrap with trusted wrapping key.\n");
         return rc;

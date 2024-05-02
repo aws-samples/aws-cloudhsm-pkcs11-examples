@@ -38,12 +38,12 @@ following installed:
 
 Create a build directory and execute CMake. This will create a Makefile for the
 project. Run make to build the examples. Specifying HSM_USER, HSM_PASSWORD, and
-TRUSTED_WRAPPING_KEY_HANDLE are optional for source build, but required for tests.
+TRUSTED_WRAPPING_KEY_LABEL are optional for source build, but required for tests.
 
 ```
 mkdir build/
 cd build/
-cmake .. -DHSM_USER=<user> -DHSM_PASSWORD=<password> -DTRUSTED_WRAPPING_KEY_HANDLE=<trusted_key>
+cmake .. -DHSM_USER=<user> -DHSM_PASSWORD=<password> -DTRUSTED_WRAPPING_KEY_LABEL=<trusted_key>
 make
 ```
 
@@ -51,12 +51,12 @@ make
 
 Create a build directory and execute CMake. This will create a Makefile for the
 project. Run make to build the examples. Specifying HSM_USER, HSM_PASSWORD, and
-TRUSTED_WRAPPING_KEY_HANDLE are optional for source build, but required for tests.
+TRUSTED_WRAPPING_KEY_LABEL are optional for source build, but required for tests.
 
 ```
 mkdir build/
 cd build/
-cmake .. -DHSM_USER=<user> -DHSM_PASSWORD=<password> -DTRUSTED_WRAPPING_KEY_HANDLE=<trusted_key> -DCLOUDHSM_PKCS11_VENDOR_DEFS_PATH=<path_to_pkcs11_header_file>
+cmake .. -DHSM_USER=<user> -DHSM_PASSWORD=<password> -DTRUSTED_WRAPPING_KEY_LABEL=<trusted_key> -DCLOUDHSM_PKCS11_VENDOR_DEFS_PATH=<path_to_pkcs11_header_file>
 ```
 The CLOUDHSM_PKCS11_VENDOR_DEFS_PATH is an optional parameter containing the path to the directory which contains the 
 custom header file cloudhsm_pkcs11_vendor_defs.h.
@@ -73,6 +73,8 @@ the samples.
 Application binaries are in the `build/src/` directory. Applications will request
 a PIN on the command line. The CloudHSM PKCS#11 library will be used by default.
 In Linux, the binaries have no file type. In Windows, the binaries will end in `.exe`
+
+CloudHSM PKCS#11 SDK does not currently support ECDH derive key with KDF. To enable ECDH derive key without KDF, use the `configure-pkcs11 --enable-ecdh-without-kdf` command.
 
 #### Linux
 
