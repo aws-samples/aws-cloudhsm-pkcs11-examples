@@ -43,7 +43,3 @@ add_subdirectory(src/find_objects)
 add_subdirectory(src/derivation)
 add_subdirectory(src/generate_random)
 add_subdirectory(src/session)
-
-IF(LINUX)
-  add_subdirectory(src/tools)
-ENDIF()
