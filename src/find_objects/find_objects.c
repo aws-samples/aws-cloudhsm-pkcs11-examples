@@ -212,7 +212,7 @@ CK_RV find_keys_by_search_template(CK_SESSION_HANDLE session) {
     CK_OBJECT_HANDLE rsa_priv_key_handle = CK_INVALID_HANDLE;
     CK_RV rv = generate_rsa_keypair(session, 2048, &rsa_pub_key_handle, &rsa_priv_key_handle);
     if (CKR_OK != rv) {
-        fprintf(stderr, "Failed to generate an AES key: %lu\n", rv);
+        fprintf(stderr, "Failed to generate an RSA key: %lu\n", rv);
         return rv;
     }
 
