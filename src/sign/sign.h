@@ -39,6 +39,10 @@ CK_RV multi_part_verify_signature(CK_SESSION_HANDLE session,
                                   CK_ULONG data_length,
                                   CK_BYTE_PTR signature,
                                   CK_ULONG signature_length);
+CK_RV generate_x509cert(CK_SESSION_HANDLE session,
+                    CK_OBJECT_HANDLE private_key,
+                    CK_OBJECT_HANDLE public_key,
+                    CK_MECHANISM_TYPE mechanism);                             
 
 
 #endif

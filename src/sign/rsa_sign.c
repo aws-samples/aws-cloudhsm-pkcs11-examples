@@ -155,3 +155,24 @@ CK_RV multi_part_rsa_sign_verify(CK_SESSION_HANDLE session) {
 
     return CKR_OK;
 }
+
+CK_RV x509_rsa_sign_verify(CK_SESSION_HANDLE session) {
+    CK_OBJECT_HANDLE signing_public_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE signing_private_key = CK_INVALID_HANDLE;
+
+    CK_RV rv = generate_rsa_keypair(session, 2048, &signing_public_key, &signing_private_key);
+    if (CKR_OK != rv) {
+        printf("RSA key generation failed: %lu\n", rv);
+        return rv;
+    }
+
+    // Set the PKCS11 signature mechanism type.
+    CK_MECHANISM_TYPE mechanism = CKM_SHA512_RSA_PKCS;
+
+    rv = generate_x509cert(session, signing_private_key, signing_public_key, mechanism);
+    if (CKR_OK != rv) {
+        printf("Signature generation failed: %lu\n", rv);
+        return EXIT_FAILURE;
+    }
+    return CKR_OK;
+}
