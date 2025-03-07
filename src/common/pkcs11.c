@@ -62,7 +62,7 @@ CK_RV pkcs11_load_functions(char *library_path) {
 #else
 CK_RV pkcs11_load_functions(char *library_path) {
     CK_RV rv;
-    CK_RV(*pFunc)();
+    CK_RV(*pFunc)(CK_FUNCTION_LIST_PTR_PTR);
     void *d;
 
     d = dlopen(library_path, RTLD_NOW | RTLD_GLOBAL);
@@ -71,7 +71,7 @@ CK_RV pkcs11_load_functions(char *library_path) {
         return CKR_GENERAL_ERROR;
     }
 
-    pFunc = (CK_RV (*)()) dlsym(d, "C_GetFunctionList");
+    pFunc = (CK_RV (*)(CK_FUNCTION_LIST_PTR_PTR)) dlsym(d, "C_GetFunctionList");
     if (pFunc == NULL) {
         printf("C_GetFunctionList() not found in module %s\n", library_path);
         return CKR_FUNCTION_NOT_SUPPORTED;
