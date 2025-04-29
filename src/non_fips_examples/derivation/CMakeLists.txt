@@ -3,12 +3,11 @@ project(generate)
 
 find_library(cloudhsmpkcs11 STATIC)
 
-add_executable(tdes_generate tdes_generate.c)
+add_executable(ecdh ecdh.c)
 
-
-target_link_libraries(tdes_generate cloudhsmpkcs11)
+target_link_libraries(ecdh cloudhsmpkcs11)
 
 # We do not add this file for testing as the tests currently assume
 # of a FIPS-mode CloudHSM cluster.
 
-# add_test(tdes_generate tdes_generate --pin ${HSM_USER}:${HSM_PASSWORD})
+# add_test(ecdh ecdh --pin ${HSM_USER}:${HSM_PASSWORD})
