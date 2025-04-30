@@ -90,7 +90,7 @@ CK_RV generate_ecdh_derive_key(CK_SESSION_HANDLE session,
 
     // CloudHSM PKCS#11 SDK supports ECDH derive key with KDF.
     // The following are supported vendor defined KDF types:CKD_CLOUDHSM_X963_SHA1_KDF, CKD_CLOUDHSM_X963_SHA224_KDF,
-    // CKD_CLOUDHSM_X963_SHA384_KDF and CKD_CLOUDHSM_X963_SHA512_KDF
+    // CKD_CLOUDHSM_X963_SHA256_KDF, CKD_CLOUDHSM_X963_SHA384_KDF and CKD_CLOUDHSM_X963_SHA512_KDF
     // These can be imported from /opt/cloudhsm/include/pkcs11/cloudhsm_pkcs11_vendor_defs.h
 
     ec_point_size = point_template[0].ulValueLen;
