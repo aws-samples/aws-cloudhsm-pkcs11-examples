@@ -105,6 +105,15 @@ CK_RV generate_ecdh_derive_key(CK_SESSION_HANDLE session,
     point_template[0].pValue = ec_point_value;
     rv = funcs->C_GetAttributeValue(session, peer_public_key, point_template,
                                   sizeof(point_template) / sizeof(CK_ATTRIBUTE));
+    if (CKR_OK != rv) {
+        fprintf(stderr, "Failed to get EC point value: %lu\n", rv);
+        free(ec_point_value);
+        return rv;
+    }
+
+    // To enable ECDH derive key without KDF, use the `configure-pkcs11 --enable-ecdh-without-kdf` command.
+    CK_ECDH1_DERIVE_PARAMS params = {
+        CKD_NULL,
         0,
         NULL,
         ec_point_size,
