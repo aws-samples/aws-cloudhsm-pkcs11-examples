@@ -65,37 +65,62 @@ CK_RV generate_ec_keypair(CK_SESSION_HANDLE session,
 /**
  * Generate AES Derive key using CKM_ECDH1_DERIVE mechanism
  * @param session Active PKCS#11 session
- * @param ec_base_private_key Pointer where the private key handle will be stored.
- * @param ec_base_public_key Pointer where the public key handle will be stored.
+ * @param private_key Handle to the private key for derivation
+ * @param peer_public_key Handle to the peer's public key for derivation
  * @param derived_key Pointer where the derived key handle will be stored.
  * @return CK_RV Value returned by the PKCS#11 library. This will indicate success or failure.
  */
 CK_RV generate_ecdh_derive_key(CK_SESSION_HANDLE session,
-                               CK_OBJECT_HANDLE_PTR ec_base_private_key,
-                               CK_OBJECT_HANDLE_PTR ec_base_public_key,
+                               CK_OBJECT_HANDLE private_key,
+                               CK_OBJECT_HANDLE peer_public_key,
                                CK_OBJECT_HANDLE_PTR derived_key){
     CK_RV rv;
-    // Get the needed data about the base key.
-    CK_BYTE ec_point_value[67] = { 0 };
-    CK_ULONG ec_point_size = 0;
-    CK_ATTRIBUTE point_template[] = {
-          { CKA_EC_POINT, &ec_point_value, sizeof(ec_point_value) },
-    };
-    rv = funcs->C_GetAttributeValue(session, *ec_base_public_key, point_template,
-                                  sizeof(point_template) / sizeof(CK_ATTRIBUTE));
-    if (CKR_OK != rv) {
-       fprintf(stderr, "Failed getting attribute value: %lu\n", rv);
-       return rv;
-    }
-
-    // CloudHSM PKCS#11 SDK does not currently support ECDH derive key with KDF.
-    // To enable ECDH derive key without KDF, use the `configure-pkcs11 --enable-ecdh-without-kdf` command.
-
-    ec_point_size = point_template[0].ulValueLen;
     CK_KEY_TYPE keyType = CKK_AES;
     CK_OBJECT_CLASS keyClass = CKO_SECRET_KEY;
     CK_ULONG aesKeyLen = 32;
-    CK_ECDH1_DERIVE_PARAMS params = { CKD_NULL, 0, NULL, ec_point_size - 2, &ec_point_value[2] };
+    CK_BYTE_PTR ec_point_value = NULL;
+    CK_ULONG ec_point_size = 0;
+
+    CK_ATTRIBUTE point_template[] = {
+        {CKA_EC_POINT, NULL, 0}
+    };
+
+    // First GetAttribute call to get the length
+    rv = funcs->C_GetAttributeValue(session, peer_public_key, point_template,
+                                  sizeof(point_template) / sizeof(CK_ATTRIBUTE));
+    if (CKR_OK != rv) {
+        fprintf(stderr, "Failed to get EC point length: %lu\n", rv);
+        return rv;
+    }
+
+    // Allocate memory based on the returned length
+    ec_point_size = point_template[0].ulValueLen;
+    ec_point_value = malloc(ec_point_size);
+    if (NULL == ec_point_value) {
+        fprintf(stderr, "Failed to allocate memory for EC point\n");
+        return CKR_HOST_MEMORY;
+    }
+
+    // Second call to get the EcPoint value
+    point_template[0].pValue = ec_point_value;
+    rv = funcs->C_GetAttributeValue(session, peer_public_key, point_template,
+                                  sizeof(point_template) / sizeof(CK_ATTRIBUTE));
+    if (CKR_OK != rv) {
+        fprintf(stderr, "Failed to get EC point value: %lu\n", rv);
+        free(ec_point_value);
+        return rv;
+    }
+
+    // CloudHSM PKCS#11 SDK supports ECDH derive key with KDF.
+    // The following vendor defined KDF types are supported: https://docs.aws.amazon.com/cloudhsm/latest/userguide/pkcs11-mechanisms.html#pkcs11-mech-function-derive-key
+    CK_ECDH1_DERIVE_PARAMS params = {
+        CKD_CLOUDHSM_X963_SHA256_KDF,
+        0,
+        NULL,
+        ec_point_size,
+        ec_point_value
+    };
+
     CK_MECHANISM derive_mechanism = { CKM_ECDH1_DERIVE, &params, sizeof(params) };
 
     CK_ATTRIBUTE derivekey_template[] = {
@@ -109,10 +134,11 @@ CK_RV generate_ecdh_derive_key(CK_SESSION_HANDLE session,
 
     rv = funcs->C_DeriveKey(session,
                             &derive_mechanism,
-                            *ec_base_private_key,
+                            private_key,
                             derivekey_template,
                             sizeof(derivekey_template) / sizeof(CK_ATTRIBUTE),
                             derived_key);
+    free(ec_point_value);
     return rv;
 }
 
@@ -120,13 +146,16 @@ CK_RV generate_ecdh_derive_key(CK_SESSION_HANDLE session,
 
 
 /**
- * Encrypt and decrypt a string using derived key in AES GCM mode.
+ * Encrypt using Party A's derived key in AES GCM mode.
+ * Decrypt using Party B's derived key in AES GCM mode.
  * @param session Active PKCS#11 session
  * @param aes_key Pointer where the derived AES key handle will be stored.
  * @return CK_RV Value returned by the PKCS#11 library. This will indicate success or failure.
  */
 
-CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
+CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, 
+                     CK_OBJECT_HANDLE encrypt_key, 
+                     CK_OBJECT_HANDLE decrypt_key) {
     CK_RV rv;
     CK_BYTE_PTR plaintext = "plaintext payload to encrypt";
     CK_ULONG plaintext_length = (CK_ULONG) strlen(plaintext);
@@ -136,10 +165,11 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
     CK_BYTE_PTR decrypted_ciphertext = NULL;
     CK_BYTE_PTR ciphertext = NULL;
 
-    printf("Plaintext: %s\n", plaintext);
+    printf("\nDemonstrating ECDH key agreement:\n");
+    printf("Party A encrypting payload: %s\n", plaintext);
     printf("Plaintext length: %lu\n", plaintext_length);
 
-    printf("AAD: %s\n", aad);
+    printf("\nAAD: %s\n", aad);
     printf("AAD length: %lu\n", aad_length);
 
     // Prepare the mechanism
@@ -171,7 +201,8 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
     // Encrypt
     //**********************************************************************************************
 
-    rv = funcs->C_EncryptInit(session, &mech, *aes_key);
+    printf("\nParty A encrypting with their derived key\n");
+    rv = funcs->C_EncryptInit(session, &mech, encrypt_key);
     if (CKR_OK != rv) {
         fprintf(stderr, "Encryption Init failed: %lu\n", rv);
         goto done;
@@ -210,12 +241,12 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
 
     // Ciphertext buffer = IV || ciphertext || TAG
     // Print the HSM generated IV
-    printf("IV: ");
+    printf("\nIV: ");
     print_bytes_as_hex(ciphertext, AES_GCM_IV_SIZE);
     printf("IV length: %d\n", AES_GCM_IV_SIZE);
 
     // Print just the ciphertext in hex format
-    printf("Ciphertext: ");
+    printf("\nEncrypted Ciphertext: ");
     print_bytes_as_hex(ciphertext + AES_GCM_IV_SIZE, ciphertext_length - AES_GCM_IV_SIZE - AES_GCM_TAG_SIZE);
     printf("Ciphertext length: %lu\n", ciphertext_length - AES_GCM_IV_SIZE - AES_GCM_TAG_SIZE);
 
@@ -229,11 +260,12 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
     //**********************************************************************************************
 
     // Use the IV that was prepended -- The first AES_GCM_IV_SIZE bytes of the ciphertext.
+    printf("\nParty B decrypting with their derived key\n");
     params.pIv = ciphertext;
     mech.ulParameterLen = sizeof(params);
     mech.pParameter = &params;
 
-    rv = funcs->C_DecryptInit(session, &mech, *aes_key);
+    rv = funcs->C_DecryptInit(session, &mech, decrypt_key);
     if (CKR_OK != rv) {
         fprintf(stderr, "Decryption Init failed: %lu\n", rv);
         goto done;
@@ -264,8 +296,12 @@ CK_RV aes_gcm_sample(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE_PTR aes_key) {
         fprintf(stderr, "Decryption failed: %lu\n", rv);
         goto done;
     }
-    printf("Decrypted ciphertext: %.*s\n", (int)decrypted_ciphertext_length, decrypted_ciphertext);
-    printf("Decrypted ciphertext length: %lu\n", decrypted_ciphertext_length);
+ 
+    CK_ULONG decrypted_plaintext_length = (CK_ULONG) strlen((char*)decrypted_ciphertext);
+    printf("\nDecrypted: %s\n", decrypted_ciphertext);
+    printf("Decrypted text length: %lu\n", decrypted_plaintext_length);
+    printf("\nKey Derivation %s\n", (memcmp(plaintext, decrypted_ciphertext, plaintext_length) == 0) ? 
+           "successful - encrypted payload with Party A's derived key and decrypted with Party B's derived key to get back same payload" : "failed - Keys do not match!");
 
 done:
     if (NULL != iv) {
@@ -299,8 +335,11 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    CK_OBJECT_HANDLE ec_base_public_key = CK_INVALID_HANDLE;
-    CK_OBJECT_HANDLE ec_base_private_key = CK_INVALID_HANDLE;
+// Generate key pairs for both parties
+    CK_OBJECT_HANDLE party_a_public_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE party_a_private_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE party_b_public_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE party_b_private_key = CK_INVALID_HANDLE;
 
     /**
     * Curve OIDs generated using OpenSSL on the command line.
@@ -309,22 +348,47 @@ int main(int argc, char **argv) {
     * openssl ecparam -name prime256v1 -outform DER | hexdump -C
     */
     CK_BYTE prime256v1_derive[] = {0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
-    rv = generate_ec_keypair(session, prime256v1_derive, sizeof(prime256v1_derive), &ec_base_public_key, &ec_base_private_key);
+ 
+    // Generate Party A's key pair
+    rv = generate_ec_keypair(session, prime256v1_derive, sizeof(prime256v1_derive),
+                            &party_a_public_key, &party_a_private_key);
     if (CKR_OK != rv) {
-        fprintf(stderr, "prime256v1 key generation failed: %lu\n", rv);
+        fprintf(stderr, "Party A key generation failed: %lu\n", rv);
         return EXIT_FAILURE;
     }
-    CK_OBJECT_HANDLE derived_key = CK_INVALID_HANDLE;
-
-    rv = generate_ecdh_derive_key(session, &ec_base_private_key, &ec_base_public_key, &derived_key);
-    if (CKR_OK == rv) {
-        printf("Derive key generated. Derive key handle: %lu\n", derived_key);
-    } else {
-        fprintf(stderr, "Derive key generation failed: %lu\n", rv);
+ 
+    // Generate Party B's key pair
+    rv = generate_ec_keypair(session, prime256v1_derive, sizeof(prime256v1_derive),
+                            &party_b_public_key, &party_b_private_key);
+    if (CKR_OK != rv) {
+        fprintf(stderr, "prime256v1 key generation failed for Party B: %lu\n", rv);
         return EXIT_FAILURE;
     }
 
-    aes_gcm_sample(session, &derived_key);
+    // Derive shared secrets
+    CK_OBJECT_HANDLE party_a_derived_key = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE party_b_derived_key = CK_INVALID_HANDLE;
+ 
+    // Party A derives key using B's public key
+    rv = generate_ecdh_derive_key(session, party_a_private_key, party_b_public_key, &party_a_derived_key);
+    if (CKR_OK != rv) {
+        fprintf(stderr, "Party A key derivation failed: %lu\n", rv);
+        return EXIT_FAILURE;
+    }
+
+    // Party B derives key using A's public key
+    rv = generate_ecdh_derive_key(session, party_b_private_key, party_a_public_key, &party_b_derived_key);
+    if (CKR_OK != rv) {
+        fprintf(stderr, "Party B key derivation failed: %lu\n", rv);
+        return EXIT_FAILURE;
+    }
+ 
+    // Test encryption with Party A's key and decryption with Party B's key
+    rv = aes_gcm_sample(session, party_a_derived_key, party_b_derived_key);
+    if (CKR_OK != rv) {
+        fprintf(stderr, "ECDH key agreement test failed: %lu\n", rv);
+        return EXIT_FAILURE;
+    }
 
     pkcs11_finalize_session(session);
 
