@@ -104,7 +104,7 @@ CK_RV generate_ecdh_derive_key(CK_SESSION_HANDLE session,
     // Second call to get the actual value
     point_template[0].pValue = ec_point_value;
     rv = funcs->C_GetAttributeValue(session, peer_public_key, point_template,
-                                  sizeof(point_template) / sizeof(CK_ATTRIBUTE));lk
+                                  sizeof(point_template) / sizeof(CK_ATTRIBUTE));
         0,
         NULL,
         ec_point_size,
