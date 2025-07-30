@@ -74,8 +74,6 @@ Application binaries are in the `build/src/` directory. Applications will reques
 a PIN on the command line. The CloudHSM PKCS#11 library will be used by default.
 In Linux, the binaries have no file type. In Windows, the binaries will end in `.exe`
 
-CloudHSM PKCS#11 SDK does not currently support ECDH derive key with KDF. To enable ECDH derive key without KDF, use the `configure-pkcs11 --enable-ecdh-without-kdf` command.
-
 #### Linux
 
 ```
