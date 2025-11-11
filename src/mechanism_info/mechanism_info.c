@@ -56,14 +56,26 @@ CK_RV mechanisms(CK_SESSION_HANDLE session, CK_SLOT_ID slot_id) {
         }
 
         rv = funcs->C_GetMechanismList(slot_id, mech_list, &count);
-        if (CKR_OK == rv) {
-            for (CK_ULONG i = 0; i < count; i++) {
-                CK_MECHANISM_INFO mech;
-                rv = funcs->C_GetMechanismInfo(slot_id, mech_list[i], &mech);
-                if (CKR_OK == rv) {
-                    printf("Mechanism: %s\n\tFlags: %lu\n\tMin Key Size: %lu\n\tMax keysize: %lu\n", get_mechanism_name(mech_list[i]), mech.flags, mech.ulMinKeySize, mech.ulMaxKeySize);
-                }
+        if (CKR_OK != rv) {
+            fprintf(stderr, "C_GetMechanismList failed\n");
+            exit(EXIT_FAILURE);
+        }
+
+        for (CK_ULONG i = 0; i < count; i++) {
+            CK_MECHANISM_INFO mech;
+            rv = funcs->C_GetMechanismInfo(slot_id, mech_list[i], &mech);
+            if (CKR_OK != rv) {
+                fprintf(stderr, "C_GetMechanismInfo failed for %lu\n", mech_list[i]);
+                exit(EXIT_FAILURE);
             }
+
+            const char *mechanism_name = get_mechanism_name(mech_list[i]);
+            if (NULL == mechanism_name) {
+                fprintf(stderr, "get_mechanism_name failed for %lu\n", mech_list[i]);
+                exit(EXIT_FAILURE);
+            }
+            
+            printf("Mechanism: %s\n\tFlags: %lu\n\tMin Key Size: %lu\n\tMax Key Size: %lu\n", mechanism_name, mech.flags, mech.ulMinKeySize, mech.ulMaxKeySize);
         }
 
         free(mech_list);
