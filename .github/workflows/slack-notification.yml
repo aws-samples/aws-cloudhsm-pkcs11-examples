@@ -1,0 +1,24 @@
+name: Slack Notification
+on:
+  workflow_call:
+    inputs:
+      message:
+        required: true
+        type: string
+        description: "Message to send to Slack"
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: true
+        description: "Slack webhook URL"
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send message to Slack
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {"message": "${{ inputs.message }}"}
+          webhook-type: webhook-trigger
