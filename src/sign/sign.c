@@ -43,6 +43,10 @@ int main(int argc, char **argv) {
     if (CKR_OK != rv)
         return EXIT_FAILURE;
 
+    printf("Sign/verify with x509 cert\n");
+    rv = x509_rsa_sign_verify(session);
+    if (CKR_OK != rv)
+        return EXIT_FAILURE;
     pkcs11_finalize_session(session);
 
     return EXIT_SUCCESS;
