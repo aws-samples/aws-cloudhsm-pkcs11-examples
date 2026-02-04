@@ -376,7 +376,7 @@ CK_RV find_certificate_by_label_example(CK_SESSION_HANDLE session) {
     CK_OBJECT_HANDLE cert_handle = CK_INVALID_HANDLE;
     CK_OBJECT_CLASS cert_class = CKO_CERTIFICATE;
     CK_BYTE_PTR label = "example_certificate_1";
-    CK_ULONG label_len = strlen(label);
+    CK_ULONG label_len = (CK_ULONG)strlen(label);
     X509 *cert = NULL;
     CK_OBJECT_HANDLE_PTR found_objects = NULL;
     CK_ULONG count = 0;
@@ -436,7 +436,7 @@ CK_RV find_certificate_by_search_template(CK_SESSION_HANDLE session) {
     CK_OBJECT_HANDLE cert_handle = CK_INVALID_HANDLE;
     CK_OBJECT_CLASS cert_class = CKO_CERTIFICATE;
     CK_BYTE_PTR label = "example_certificate_2";
-    CK_ULONG label_len = strlen(label);
+    CK_ULONG label_len = (CK_ULONG)strlen(label);
     X509 *cert = NULL;
     CK_BYTE_PTR subject_data = NULL;
     CK_ULONG subject_len = 0;
